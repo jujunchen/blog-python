@@ -1,0 +1,201 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}同步管理 - {{ config.APP_NAME }}{% endblock %}
+
+{% block nav_extra %}
+<li><a href="/admin/dashboard">后台</a></li>
+<li><a href="/admin/logout">退出</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>同步管理</h1>
+
+    <!-- 添加账号 -->
+    <section class="sync-section">
+        <h2>添加同步账号</h2>
+        <form id="add-account-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>平台</label>
+                    <select id="platform-type" required>
+                        {% for platform in platforms %}
+                        <option value="{{ platform }}">{{ platform | upper }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>账号名称</label>
+                    <input type="text" id="account-name" required>
+                </div>
+                <div class="form-group">
+                    <label>凭证/密钥</label>
+                    <input type="password" id="account-credential">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">添加账号</button>
+        </form>
+    </section>
+
+    <!-- 账号列表 -->
+    <section class="sync-section">
+        <h2>已配置账号</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>平台</th>
+                    <th>账号名称</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                <tr>
+                    <td>{{ account.platform_type | upper }}</td>
+                    <td>{{ account.account_name }}</td>
+                    <td><span class="status-{{ 'active' if account.is_active else 'inactive' }}">{{ '启用' if account.is_active else '禁用' }}</span></td>
+                    <td>{{ account.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <button onclick="deleteAccount({{ account.id }})" class="btn-delete">删除</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">暂无同步账号</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 同步记录 -->
+    <section class="sync-section">
+        <h2>最近同步记录</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>文章 ID</th>
+                    <th>平台</th>
+                    <th>状态</th>
+                    <th>结果</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.article_id }}</td>
+                    <td>{{ record.platform_type | upper }}</td>
+                    <td><span class="status-{{ record.status }}">{{ record.status }}</span></td>
+                    <td class="result-message">{{ record.result_message or '-' }}</td>
+                    <td>{{ record.synced_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">暂无同步记录</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<style>
+.sync-section {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.sync-section h2 {
+    margin-top: 0;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.result-message {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background: #f44336;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+</style>
+
+{% block extra_js %}
+<script>
+document.getElementById('add-account-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const platform = document.getElementById('platform-type').value;
+    const accountName = document.getElementById('account-name').value;
+    const credential = document.getElementById('account-credential').value;
+
+    try {
+        const response = await fetch('/admin/sync/account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `platform_type=${platform}&account_name=${accountName}&credential=${credential}`
+        });
+        if (response.ok) {
+            location.reload();
+        }
+    } catch (error) {
+        alert('添加失败');
+    }
+});
+
+async function deleteAccount(id) {
+    if (!confirm('确定删除此账号?')) return;
+    try {
+        const response = await fetch(`/admin/sync/account/${id}`, { method: 'DELETE' });
+        if (response.ok) location.reload();
+    } catch (error) {
+        alert('删除失败');
+    }
+}
+</script>
+{% endblock %}
+
+{% endblock %}

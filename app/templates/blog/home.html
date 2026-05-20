@@ -1,0 +1,56 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ config.APP_NAME }} - 首页{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="posts-list">
+        {% for article in articles %}
+        <article class="post-item">
+            {% if article.cover_image %}
+            <div class="post-cover">
+                <img src="{{ article.cover_image }}" alt="{{ article.title }}">
+            </div>
+            {% endif %}
+            <div class="post-content">
+                <h2 class="post-title">
+                    <a href="/article/{{ article.slug }}">{{ article.title }}</a>
+                </h2>
+                <div class="post-meta">
+                    <span class="post-date">{{ article.publish_date.strftime('%Y-%m-%d') if article.publish_date else article.created_at.strftime('%Y-%m-%d') }}</span>
+                    {% if article.category %}
+                    <span class="post-category">
+                        <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="post-summary">{{ article.summary or '暂无摘要' }}</p>
+                <div class="post-tags">
+                    {% for tag in article.tags[:5] %}
+                    <a href="/tag/{{ tag.slug }}" class="tag">{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+        {% else %}
+        <div class="empty-state">
+            <p>暂无文章</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if total > per_page %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}" class="prev">上一页</a>
+        {% endif %}
+
+        <span class="page-info">第 {{ page }} / {{ ((total - 1) // per_page) + 1 }} 页</span>
+
+        {% if page * per_page < total %}
+        <a href="?page={{ page + 1 }}" class="next">下一页</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

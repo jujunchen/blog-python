@@ -1,0 +1,133 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}评论管理 - {{ config.APP_NAME }}{% endblock %}
+
+{% block nav_extra %}
+<li><a href="/admin/dashboard">后台</a></li>
+<li><a href="/admin/logout">退出</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>评论管理</h1>
+
+    <div class="filter-tabs">
+        <a href="/admin/comments?status=all" {% if status_filter == 'all' %}class="active"{% endif %}>全部</a>
+        <a href="/admin/comments?status=pending" {% if status_filter == 'pending' or not status_filter %}class="active"{% endif %}>待审核</a>
+        <a href="/admin/comments?status=approved" {% if status_filter == 'approved' %}class="active"{% endif %}>已审核</a>
+    </div>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>文章</th>
+                <th>作者</th>
+                <th>内容</th>
+                <th>状态</th>
+                <th>时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in comments %}
+            <tr>
+                <td>{{ comment.id }}</td>
+                <td><a href="/article/{{ comment.article.slug }}" target="_blank">{{ comment.article.title[:30] }}...</a></td>
+                <td>
+                    {{ comment.author_name }}
+                    {% if comment.is_anonymous %}<span class="badge">匿名</span>{% endif %}
+                </td>
+                <td class="comment-content">{{ comment.content[:50] }}...</td>
+                <td><span class="status-{{ 'approved' if comment.approved else 'pending' }}">{{ '已审核' if comment.approved else '待审核' }}</span></td>
+                <td>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if not comment.approved %}
+                    <button onclick="approveComment({{ comment.id }})" class="btn-action btn-approve">通过</button>
+                    {% endif %}
+                    <button onclick="deleteComment({{ comment.id }})" class="btn-action btn-delete">删除</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.filter-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-tabs a {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+.filter-tabs a.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.comment-content {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.badge {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.btn-approve {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-delete {
+    background: #f44336;
+    color: white;
+}
+</style>
+
+{% block extra_js %}
+<script>
+async function approveComment(id) {
+    if (!confirm('确定通过此评论?')) return;
+    try {
+        const response = await fetch(`/admin/comments/${id}/approve`, { method: 'POST' });
+        if (response.ok) location.reload();
+    } catch (error) {
+        alert('操作失败');
+    }
+}
+
+async function deleteComment(id) {
+    if (!confirm('确定删除此评论?')) return;
+    try {
+        const response = await fetch(`/admin/comments/${id}/delete`, { method: 'POST' });
+        if (response.ok) location.reload();
+    } catch (error) {
+        alert('操作失败');
+    }
+}
+</script>
+{% endblock %}
+
+{% endblock %}

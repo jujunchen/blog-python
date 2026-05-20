@@ -1,0 +1,139 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}系统设置 - {{ config.APP_NAME }}{% endblock %}
+
+{% block nav_extra %}
+<li><a href="/admin/dashboard">后台</a></li>
+<li><a href="/admin/logout">退出</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>系统设置</h1>
+
+    <div class="settings-grid">
+        <!-- 主题设置 -->
+        <section class="settings-section">
+            <h2>主题设置</h2>
+            <div class="setting-item">
+                <label>当前主题</label>
+                <select id="theme-select">
+                    <option value="light" {% if theme_setting.current_theme == 'light' %}selected{% endif %}>亮色主题</option>
+                    <option value="dark" {% if theme_setting.current_theme == 'dark' %}selected{% endif %}>暗色主题</option>
+                </select>
+                <button onclick="updateTheme()" class="btn-save">保存</button>
+            </div>
+        </section>
+
+        <!-- 评论设置 -->
+        <section class="settings-section">
+            <h2>评论设置</h2>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="allow-registered" {% if comment_config.allow_registered_comments %}checked{% endif %}>
+                    允许注册用户评论
+                </label>
+            </div>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="allow-anonymous" {% if comment_config.allow_anonymous_comments %}checked{% endif %}>
+                    允许匿名评论
+                </label>
+            </div>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="require-approval" {% if comment_config.require_approval %}checked{% endif %}>
+                    评论需要审核
+                </label>
+            </div>
+            <button onclick="updateCommentConfig()" class="btn-save">保存</button>
+        </section>
+    </div>
+</div>
+
+<style>
+.settings-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.settings-section {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.settings-section h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.setting-item label {
+    flex: 1;
+}
+
+.setting-item select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.btn-save {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+</style>
+
+{% block extra_js %}
+<script>
+async function updateTheme() {
+    const theme = document.getElementById('theme-select').value;
+    try {
+        const response = await fetch('/admin/settings/theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `theme=${theme}`
+        });
+        if (response.ok) {
+            alert('主题已更新');
+            location.reload();
+        }
+    } catch (error) {
+        alert('保存失败');
+    }
+}
+
+async function updateCommentConfig() {
+    const allowRegistered = document.getElementById('allow-registered').checked;
+    const allowAnonymous = document.getElementById('allow-anonymous').checked;
+    const requireApproval = document.getElementById('require-approval').checked;
+
+    try {
+        const response = await fetch('/admin/settings/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `allow_registered=${allowRegistered}&allow_anonymous=${allowAnonymous}&require_approval=${requireApproval}`
+        });
+        if (response.ok) {
+            alert('设置已保存');
+        }
+    } catch (error) {
+        alert('保存失败');
+    }
+}
+</script>
+{% endblock %}
+
+{% endblock %}

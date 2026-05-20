@@ -1,0 +1,27 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}归档 - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="archive-title">文章归档</h1>
+
+    <div class="archives-list">
+        {% for year_month, articles in archives.items() %}
+        <div class="archive-group">
+            <h2 class="archive-date">{{ year_month }}</h2>
+            <ul class="archive-articles">
+                {% for article in articles %}
+                <li class="archive-item">
+                    <span class="archive-day">{{ article.publish_date.strftime('%d') }}</span>
+                    <a href="/article/{{ article.slug }}" class="archive-title">{{ article.title }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <p class="empty-state">暂无文章</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

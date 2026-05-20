@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
+    <title>{% block title %}{{ config.APP_NAME }}{% endblock %}</title>
+
+    <!-- 主题样式 -->
+    <link rel="stylesheet" href="/static/css/themes/{{ theme | default('light') }}/main.css">
+
+    <!-- 额外样式 -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">{{ config.APP_NAME }}</a>
+            <ul class="nav-menu">
+                <li><a href="/">首页</a></li>
+                <li><a href="/archives">归档</a></li>
+                <li><a href="/search">搜索</a></li>
+                {% block nav_extra %}{% endblock %}
+            </ul>
+            <div class="theme-switcher">
+                <button id="theme-toggle" title="切换主题">
+                    {% if theme == 'dark' %}
+                    <span class="icon">☀️</span>
+                    {% else %}
+                    <span class="icon">🌙</span>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ now().year }} {{ config.APP_NAME }}. All rights reserved.</p>
+            <p>
+                <a href="/sitemap.xml">站点地图</a> |
+                <a href="/robots.txt">ROBOTS</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 主题切换
+        document.getElementById('theme-toggle')?.addEventListener('click', async () => {
+            const currentTheme = '{{ theme }}';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            try {
+                const response = await fetch('/api/theme', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `theme=${newTheme}`
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('主题切换失败:', error);
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

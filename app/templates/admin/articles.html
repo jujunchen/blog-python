@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}文章管理 - {{ config.APP_NAME }}{% endblock %}
+
+{% block nav_extra %}
+<li><a href="/admin/dashboard">后台</a></li>
+<li><a href="/admin/articles">文章</a></li>
+<li><a href="/admin/logout">退出</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-header">
+        <h1>文章管理</h1>
+        <a href="/admin/articles/new" class="btn-primary">新建文章</a>
+    </div>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>标题</th>
+                <th>分类</th>
+                <th>标签</th>
+                <th>状态</th>
+                <th>发布日期</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article in articles %}
+            <tr>
+                <td>{{ article.id }}</td>
+                <td><a href="/article/{{ article.slug }}" target="_blank">{{ article.title }}</a></td>
+                <td>{{ article.category.name if article.category else '-' }}</td>
+                <td>
+                    {% for tag in article.tags[:3] %}
+                    <span class="tag-small">{{ tag.name }}</span>
+                    {% endfor %}
+                </td>
+                <td><span class="status-{{ article.status }}">{{ article.status }}</span></td>
+                <td>{{ article.publish_date.strftime('%Y-%m-%d') if article.publish_date else '-' }}</td>
+                <td>
+                    <a href="/admin/articles/{{ article.id }}/edit">编辑</a>
+                    {% if article.status == 'draft' %}
+                    <form method="post" action="/admin/articles/{{ article.id }}/publish" style="display: inline;">
+                        <button type="submit" class="btn-link">发布</button>
+                    </form>
+                    {% endif %}
+                    <a href="/admin/articles/{{ article.id }}/delete" onclick="return confirm('确定删除?')">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if total > per_page %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}">上一页</a>
+        {% endif %}
+        <span>第 {{ page }} / {{ ((total - 1) // per_page) + 1 }} 页</span>
+        {% if page * per_page < total %}
+        <a href="?page={{ page + 1 }}">下一页</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.tag-small {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    margin-right: 4px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+}
+</style>
+{% endblock %}

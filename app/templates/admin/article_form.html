@@ -1,0 +1,147 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ '编辑' if article else '新建' }}文章 - {{ config.APP_NAME }}{% endblock %}
+
+{% block nav_extra %}
+<li><a href="/admin/dashboard">后台</a></li>
+<li><a href="/admin/articles">文章</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ '编辑' if article else '新建' }}文章</h1>
+
+    <form method="post" action="{{ '/admin/articles/' + article.id|string + '/edit' if article else '/admin/articles/new' }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="title">标题 *</label>
+                <input type="text" id="title" name="title" value="{{ article.title if article else '' }}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="slug">URL Slug *</label>
+                <input type="text" id="slug" name="slug" value="{{ article.slug if article else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="category_id">分类</label>
+                <select id="category_id" name="category_id">
+                    <option value="">请选择</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if article and article.category_id == cat.id %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full">
+                <label for="summary">摘要</label>
+                <textarea id="summary" name="summary" rows="3">{{ article.summary if article else '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full">
+                <label for="markdown_content">Markdown 内容 *</label>
+                <textarea id="markdown_content" name="markdown_content" rows="15" required>{{ article.markdown_content if article else '' }}</textarea>
+                <p class="form-hint">支持 Markdown 语法</p>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="cover_image">封面图片 URL</label>
+                <input type="text" id="cover_image" name="cover_image" value="{{ article.cover_image if article else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="status">状态</label>
+                <select id="status" name="status">
+                    <option value="draft" {% if article and article.status == 'draft' %}selected{% endif %}>草稿</option>
+                    <option value="published" {% if article and article.status == 'published' %}selected{% endif %}>已发布</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full">
+                <label for="tags">标签（用逗号分隔）</label>
+                <input type="text" id="tags" name="tags" value="{{ article_tags | join(', ') if article else '' }}">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">保存</button>
+            <a href="/admin/articles" class="btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+}
+
+.form-group.full {
+    flex: 100%;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text-color);
+}
+
+.form-hint {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+}
+</style>
+{% endblock %}

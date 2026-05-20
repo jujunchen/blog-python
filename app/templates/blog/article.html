@@ -1,0 +1,91 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ article.title }} - {{ config.APP_NAME }}{% endblock %}
+{% block meta_description %}{{ article.summary or article.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <article class="article-detail">
+        <header class="article-header">
+            <h1 class="article-title">{{ article.title }}</h1>
+            <div class="article-meta">
+                <span class="article-date">
+                    {{ article.publish_date.strftime('%Y-%m-%d') if article.publish_date else article.created_at.strftime('%Y-%m-%d') }}
+                </span>
+                {% if article.category %}
+                <span class="article-category">
+                    <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
+                </span>
+                {% endif %}
+            </div>
+        </header>
+
+        {% if article.cover_image %}
+        <div class="article-cover">
+            <img src="{{ article.cover_image }}" alt="{{ article.title }}">
+        </div>
+        {% endif %}
+
+        <div class="article-content">
+            {{ article.html_content | safe if article.html_content else article.markdown_content }}
+        </div>
+
+        <div class="article-tags">
+            {% for tag in article.tags %}
+            <a href="/tag/{{ tag.slug }}" class="tag">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </article>
+
+    <!-- 评论区域 -->
+    <section class="comments-section">
+        <h3>评论 ({{ comments|length }})</h3>
+
+        {% if comment_config.allow_anonymous_comments or comment_config.allow_registered_comments %}
+        <form class="comment-form" method="post" action="/api/comments">
+            <input type="hidden" name="article_id" value="{{ article.id }}">
+
+            <div class="form-group">
+                <label for="author_name">昵称</label>
+                <input type="text" id="author_name" name="author_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="author_email">邮箱（不公开）</label>
+                <input type="email" id="author_email" name="author_email">
+            </div>
+
+            <div class="form-group">
+                <label for="content">评论内容</label>
+                <textarea id="content" name="content" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_anonymous" value="true"> 匿名评论
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit">提交评论</button>
+        </form>
+        {% else %}
+        <p class="comment-closed">评论已关闭</p>
+        {% endif %}
+
+        <!-- 评论列表 -->
+        <div class="comments-list">
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">
+                        {% if comment.is_anonymous %}匿名用户{% else %}{{ comment.author_name }}{% endif %}
+                    </span>
+                    <span class="comment-date">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
