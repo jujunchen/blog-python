@@ -28,7 +28,7 @@
     --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
 
     --sidebar-width: 240px;
-    --sidebar-collapsed-width: 68px;
+    --sidebar-collapsed-width: 56px;
     --transition-fast: 150ms;
     --transition-normal: 250ms;
     --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -106,79 +106,272 @@
     z-index: 90;
 }
 
-/* Sidebar Collapse Handle */
+/* Sidebar Collapse Handle - 底部固定 */
 .sidebar-handle {
     position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 12px;
-    height: 48px;
+    bottom: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-border);
-    border-left: none;
-    border-radius: 0 8px 8px 0;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast) var(--easing-smooth);
-    z-index: 1;
+    transition: all var(--transition-normal) var(--easing-smooth);
+    z-index: 10;
 }
 
 .sidebar-handle:hover {
     background: var(--admin-surface-hover);
     border-color: var(--admin-border-light);
-    width: 16px;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-handle .handle-icon {
     color: var(--admin-text-muted);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1;
-    transition: transform var(--transition-normal) var(--easing-smooth);
+    transition: all var(--transition-normal) var(--easing-smooth);
 }
 
 .sidebar-handle:hover .handle-icon {
-    color: var(--admin-text-secondary);
+    color: var(--admin-text);
 }
 
-/* Sidebar Collapsed State (Desktop) */
-.admin-sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
+/* Collapsed State Handle - 底部居中 */
+.admin-sidebar.collapsed .sidebar-handle {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+}
+
+.admin-sidebar.collapsed .sidebar-handle:hover {
+    transform: translateX(-50%) scale(1.1);
 }
 
 .admin-sidebar.collapsed .sidebar-handle .handle-icon {
     transform: rotate(180deg);
 }
 
+/* Sidebar Collapsed State (Desktop) - 极简精致设计 */
+.admin-sidebar.collapsed,
+html.sidebar-collapsed .admin-sidebar {
+    width: 56px;
+    overflow: hidden;
+}
+
+/* Main Content Collapsed State - 提前应用避免闪烁 */
+html.sidebar-collapsed .admin-main {
+    margin-left: 56px;
+}
+
+/* 初始状态隐藏所有文字 - 防止页面跳转时闪烁 */
+html.sidebar-collapsed .logo-text,
+html.sidebar-collapsed .nav-label,
+html.sidebar-collapsed .nav-menu li a span:not(.nav-icon),
+html.sidebar-collapsed .version {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 初始状态底部手柄图标旋转 */
+html.sidebar-collapsed .sidebar-handle .handle-icon {
+    transform: rotate(180deg);
+}
+
+/* Main Content 同步过渡 */
+.admin-main {
+    transition: margin-left var(--transition-normal) var(--easing-smooth);
+}
+
+.admin-sidebar.collapsed .sidebar-handle .handle-icon {
+    transform: rotate(180deg);
+}
+
+/* 隐藏所有文字元素 */
 .admin-sidebar.collapsed .logo-text,
 .admin-sidebar.collapsed .nav-label,
 .admin-sidebar.collapsed .nav-menu li a span:not(.nav-icon),
 .admin-sidebar.collapsed .version {
     opacity: 0;
     width: 0;
+    height: 0;
     overflow: hidden;
-    transition: opacity var(--transition-fast);
+    position: absolute;
 }
 
+/* Logo 区域 */
 .admin-sidebar.collapsed .sidebar-header {
-    padding: 24px 12px;
+    padding: 16px 0 12px;
     justify-content: center;
+    border-bottom: 1px solid var(--admin-border);
 }
 
 .admin-sidebar.collapsed .admin-logo {
     justify-content: center;
 }
 
-.admin-sidebar.collapsed .nav-menu li a {
-    justify-content: center;
-    padding: 12px;
+.admin-sidebar.collapsed .admin-logo .logo-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
+.admin-sidebar.collapsed .admin-logo:hover .logo-icon {
+    transform: scale(1.1);
+}
+
+/* 导航区域 - 紧凑网格布局 */
 .admin-sidebar.collapsed .sidebar-nav {
-    padding: 16px 6px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-sidebar.collapsed .nav-section {
+    margin-bottom: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-sidebar.collapsed .nav-section:not(:last-child) {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-sidebar.collapsed .nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.admin-sidebar.collapsed .nav-menu li {
+    margin-bottom: 0;
+}
+
+/* 导航项 - 极简圆形设计 */
+.admin-sidebar.collapsed .nav-menu li a {
+    justify-content: center;
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    position: relative;
+    transition: all 0.2s ease;
+    background: transparent;
+    display: flex;
+    align-items: center;
+}
+
+.admin-sidebar.collapsed .nav-menu li a:hover {
+    background: var(--admin-surface-hover);
+    transform: scale(1.1);
+}
+
+.admin-sidebar.collapsed .nav-menu li a.active {
+    background: var(--admin-text);
+    color: var(--admin-bg);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 图标样式 */
+.admin-sidebar.collapsed .nav-icon {
+    font-size: 16px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+.admin-sidebar.collapsed .nav-menu li a:hover .nav-icon {
+    transform: scale(1.1);
+}
+
+/* Tooltip 优化 - 简洁风格 */
+.admin-sidebar.collapsed .nav-menu li a::after {
+    content: attr(title);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 6px 10px;
+    background: var(--admin-text);
+    color: var(--admin-bg);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+.admin-sidebar.collapsed .nav-menu li a::before {
+    content: '';
+    position: absolute;
+    left: calc(100% + 5px);
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: var(--admin-text);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.15s ease;
+    pointer-events: none;
+}
+
+.admin-sidebar.collapsed .nav-menu li a:hover::after,
+.admin-sidebar.collapsed .nav-menu li a:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 底部区域 - 版本号和收缩按钮 */
+.sidebar-footer {
+    padding: 16px 20px 48px;
+    border-top: 1px solid var(--admin-border);
+    position: relative;
+}
+
+.version {
+    font-size: 11px;
+    color: var(--admin-text-muted);
+    font-family: var(--font-mono);
+}
+
+.admin-sidebar.collapsed .sidebar-footer {
+    padding: 12px 8px 52px;
+    display: flex;
+    justify-content: center;
+    border-top: 1px solid var(--admin-border);
+}
+
+.admin-sidebar.collapsed .version {
+    font-size: 9px;
+    width: auto;
+    opacity: 0.4;
 }
 
 /* Main Content Sidebar Collapsed */
@@ -302,17 +495,6 @@
     font-size: 14px;
 }
 
-/* Sidebar Footer */
-.sidebar-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--admin-border);
-}
-
-.version {
-    font-size: 11px;
-    color: var(--admin-text-muted);
-    font-family: var(--font-mono);
-}
 
 /* Main Content */
 .admin-main {

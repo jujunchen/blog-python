@@ -14,6 +14,19 @@
     <!-- Admin Styles -->
     <link rel="stylesheet" href="/static/css/admin.css">
 
+    <!-- 立即读取侧边栏状态，防止闪烁 - 在 CSS 之后立即执行 -->
+    <script>
+        (function() {
+            try {
+                const SIDEBAR_STATE_KEY = 'admin_sidebar_collapsed';
+                const isMobile = window.innerWidth < 768;
+                if (!isMobile && localStorage.getItem(SIDEBAR_STATE_KEY) === 'true') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Extra Styles -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -33,10 +46,6 @@
 
     <!-- Sidebar Navigation -->
     <aside class="admin-sidebar" id="admin-sidebar">
-        <!-- Sidebar Collapse Handle -->
-        <div id="sidebar-handle" class="sidebar-handle" title="点击收起/展开侧边栏">
-            <span class="handle-icon">‹</span>
-        </div>
         <div class="sidebar-header">
             <a href="/admin/dashboard" class="admin-logo">
                 <span class="logo-icon">A</span>
@@ -49,32 +58,32 @@
                 <span class="nav-label">管理</span>
                 <ul class="nav-menu">
                     <li>
-                        <a href="/admin/dashboard" class="{% if request.path == '/admin/dashboard' %}active{% endif %}">
-                            <span class="nav-icon">◆</span>
+                        <a href="/admin/dashboard" title="仪表盘" class="{% if request.path == '/admin/dashboard' %}active{% endif %}">
+                            <span class="nav-icon">📊</span>
                             <span>仪表盘</span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/articles" class="{% if '/admin/articles' in request.path %}active{% endif %}">
-                            <span class="nav-icon">◈</span>
+                        <a href="/admin/articles" title="文章管理" class="{% if '/admin/articles' in request.path %}active{% endif %}">
+                            <span class="nav-icon">📝</span>
                             <span>文章管理</span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/comments" class="{% if '/admin/comments' in request.path %}active{% endif %}">
-                            <span class="nav-icon">◉</span>
+                        <a href="/admin/comments" title="评论管理" class="{% if '/admin/comments' in request.path %}active{% endif %}">
+                            <span class="nav-icon">💬</span>
                             <span>评论管理</span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/categories" class="{% if '/admin/categories' in request.path %}active{% endif %}">
-                            <span class="nav-icon">◇</span>
+                        <a href="/admin/categories" title="分类管理" class="{% if '/admin/categories' in request.path %}active{% endif %}">
+                            <span class="nav-icon">🏷️</span>
                             <span>分类管理</span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/sync" class="{% if '/admin/sync' in request.path %}active{% endif %}">
-                            <span class="nav-icon">↻</span>
+                        <a href="/admin/sync" title="同步管理" class="{% if '/admin/sync' in request.path %}active{% endif %}">
+                            <span class="nav-icon">🔄</span>
                             <span>同步管理</span>
                         </a>
                     </li>
@@ -85,8 +94,8 @@
                 <span class="nav-label">系统</span>
                 <ul class="nav-menu">
                     <li>
-                        <a href="/admin/settings" class="{% if '/admin/settings' in request.path %}active{% endif %}">
-                            <span class="nav-icon">◐</span>
+                        <a href="/admin/settings" title="系统设置" class="{% if '/admin/settings' in request.path %}active{% endif %}">
+                            <span class="nav-icon">⚙️</span>
                             <span>系统设置</span>
                         </a>
                     </li>
@@ -97,14 +106,14 @@
                 <span class="nav-label">快捷</span>
                 <ul class="nav-menu">
                     <li>
-                        <a href="/" target="_blank">
-                            <span class="nav-icon">→</span>
+                        <a href="/" target="_blank" title="博客首页">
+                            <span class="nav-icon">🏠</span>
                             <span>博客首页</span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/logout">
-                            <span class="nav-icon">←</span>
+                        <a href="/admin/logout" title="退出登录">
+                            <span class="nav-icon">🚪</span>
                             <span>退出登录</span>
                         </a>
                     </li>
@@ -114,8 +123,42 @@
 
         <div class="sidebar-footer">
             <span class="version">v1.0.0</span>
+            <!-- Sidebar Collapse Handle -->
+            <div id="sidebar-handle" class="sidebar-handle" title="点击收起/展开侧边栏">
+                <span class="handle-icon">‹</span>
+            </div>
         </div>
     </aside>
+
+    <!-- 立即初始化侧边栏状态 - 防止页面跳转时闪烁 -->
+    <script>
+        (function() {
+            try {
+                // 移除 html 上的临时状态标记，由元素自己的 class 接管
+                document.documentElement.classList.remove('sidebar-collapsed');
+
+                const SIDEBAR_STATE_KEY = 'admin_sidebar_collapsed';
+                const isMobile = window.innerWidth < 768;
+
+                if (!isMobile) {
+                    const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+                    const sidebar = document.getElementById('admin-sidebar');
+                    const mainContent = document.querySelector('.admin-main');
+
+                    if (savedState === 'true' && sidebar && mainContent) {
+                        sidebar.style.transition = 'none';
+                        mainContent.style.transition = 'none';
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('sidebar-collapsed');
+                        // 强制重排后再恢复过渡
+                        void sidebar.offsetWidth;
+                        sidebar.style.transition = '';
+                        mainContent.style.transition = '';
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <!-- Main Content Area -->
     <main class="admin-main">
