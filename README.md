@@ -11,6 +11,12 @@
 - 评论系统（支持注册用户和匿名评论）
 - 管理后台
 
+## 界面预览
+### 管理后台
+![管理后台](doc/images/admin_index.png)
+### 首页
+![首页](doc/images/index.png)
+
 ## 技术栈
 
 - Python 3.11+
