@@ -20,13 +20,23 @@
 <body class="admin-body" data-theme="dark">
     <!-- Top Toolbar -->
     <div class="admin-topbar">
+        <button id="mobile-sidebar-toggle" class="sidebar-toggle mobile-sidebar-toggle" title="菜单" style="margin-right: 8px;">
+            <span>☰</span>
+        </button>
         <button id="admin-theme-toggle" class="theme-btn" title="切换主题">
             <span class="theme-icon">☀</span>
         </button>
     </div>
 
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
     <!-- Sidebar Navigation -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <!-- Sidebar Collapse Handle -->
+        <div id="sidebar-handle" class="sidebar-handle" title="点击收起/展开侧边栏">
+            <span class="handle-icon">‹</span>
+        </div>
         <div class="sidebar-header">
             <a href="/admin/dashboard" class="admin-logo">
                 <span class="logo-icon">A</span>
@@ -54,6 +64,12 @@
                         <a href="/admin/comments" class="{% if '/admin/comments' in request.path %}active{% endif %}">
                             <span class="nav-icon">◉</span>
                             <span>评论管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/categories" class="{% if '/admin/categories' in request.path %}active{% endif %}">
+                            <span class="nav-icon">◇</span>
+                            <span>分类管理</span>
                         </a>
                     </li>
                     <li>
@@ -103,6 +119,18 @@
 
     <!-- Main Content Area -->
     <main class="admin-main">
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="flash-messages">
+            {% for msg in messages %}
+            <div class="flash-message flash-{{ msg.category }}">
+                <span>{{ msg.message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 
@@ -146,6 +174,116 @@
 
             // 页面加载时初始化
             initTheme();
+        })();
+
+        // 侧边栏收缩功能
+        (function() {
+            const SIDEBAR_STATE_KEY = 'admin_sidebar_collapsed';
+            const MOBILE_BREAKPOINT = 768;
+
+            const sidebar = document.getElementById('admin-sidebar');
+            const mainContent = document.querySelector('.admin-main');
+            const overlay = document.getElementById('sidebar-overlay');
+            const sidebarHandle = document.getElementById('sidebar-handle');
+            const mobileToggle = document.getElementById('mobile-sidebar-toggle');
+
+            let isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+
+            // 检查是否为移动端
+            function checkIsMobile() {
+                return window.innerWidth < MOBILE_BREAKPOINT;
+            }
+
+            // 桌面端：切换侧边栏收缩状态
+            function toggleDesktopSidebar() {
+                const isCollapsed = sidebar.classList.contains('collapsed');
+
+                if (isCollapsed) {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('sidebar-collapsed');
+                    sidebarHandle.title = '点击收起侧边栏';
+                    localStorage.setItem(SIDEBAR_STATE_KEY, 'false');
+                } else {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('sidebar-collapsed');
+                    sidebarHandle.title = '点击展开侧边栏';
+                    localStorage.setItem(SIDEBAR_STATE_KEY, 'true');
+                }
+            }
+
+            // 移动端：切换侧边栏显示状态
+            function toggleMobileSidebar() {
+                const isOpen = sidebar.classList.contains('mobile-open');
+
+                if (isOpen) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                } else {
+                    sidebar.classList.add('mobile-open');
+                    overlay.classList.add('active');
+                }
+            }
+
+            // 初始化侧边栏状态
+            function initSidebar() {
+                isMobile = checkIsMobile();
+
+                if (!isMobile) {
+                    // 桌面端：恢复保存的状态
+                    const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+                    if (savedState === 'true') {
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('sidebar-collapsed');
+                        if (sidebarHandle) {
+                            sidebarHandle.title = '点击展开侧边栏';
+                        }
+                    }
+                } else {
+                    // 移动端：确保没有桌面端的收缩类
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('sidebar-collapsed');
+                }
+            }
+
+            // 窗口大小改变时重新初始化
+            function handleResize() {
+                const wasMobile = isMobile;
+                isMobile = checkIsMobile();
+
+                if (wasMobile !== isMobile) {
+                    // 设备类型切换，清理对方的状态
+                    if (isMobile) {
+                        // 切换到移动端：移除桌面端状态，关闭移动端侧边栏
+                        sidebar.classList.remove('collapsed');
+                        mainContent.classList.remove('sidebar-collapsed');
+                        sidebar.classList.remove('mobile-open');
+                        overlay.classList.remove('active');
+                    } else {
+                        // 切换到桌面端：移除移动端状态，恢复桌面端状态
+                        sidebar.classList.remove('mobile-open');
+                        overlay.classList.remove('active');
+                        initSidebar();
+                    }
+                }
+            }
+
+            // 绑定事件
+            if (sidebarHandle) {
+                sidebarHandle.addEventListener('click', toggleDesktopSidebar);
+            }
+
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', toggleMobileSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', toggleMobileSidebar);
+            }
+
+            window.addEventListener('resize', handleResize);
+
+            // 页面加载时初始化
+            initSidebar();
         })();
     </script>
     {% block extra_js %}{% endblock %}

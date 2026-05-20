@@ -248,6 +248,13 @@ def delete_category(db: Session, category_id: int) -> bool:
     if not db_category:
         return False
 
+    # 将该分类下所有文章的 category_id 设为 None
+    from app.models import Article
+    db.query(Article).filter(Article.category_id == category_id).update(
+        {Article.category_id: None},
+        synchronize_session=False
+    )
+
     db.delete(db_category)
     db.commit()
     return True

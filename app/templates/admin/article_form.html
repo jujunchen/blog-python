@@ -43,9 +43,42 @@
 
         <div class="form-row">
             <div class="form-group full">
-                <label for="markdown_content">Markdown 内容 *</label>
-                <textarea id="markdown_content" name="markdown_content" rows="15" required>{{ article.markdown_content if article else '' }}</textarea>
-                <p class="form-hint">支持 Markdown 语法</p>
+                <label for="markdown_content">Markdown 内容 * <small class="hint-text">(支持 Ctrl+V 粘贴图片自动上传)</small></label>
+
+                <!-- Markdown 快捷工具栏 -->
+                <div class="md-toolbar">
+                    <button type="button" data-markdown="# " title="一级标题">H1</button>
+                    <button type="button" data-markdown="## " title="二级标题">H2</button>
+                    <button type="button" data-markdown="### " title="三级标题">H3</button>
+                    <span class="toolbar-divider"></span>
+                    <button type="button" data-markdown="**{{selected}}**" title="粗体">B</button>
+                    <button type="button" data-markdown="*{{selected}}*" title="斜体">I</button>
+                    <button type="button" data-markdown="~~{{selected}}~~" title="删除线">S</button>
+                    <span class="toolbar-divider"></span>
+                    <button type="button" data-markdown="> " title="引用">引用</button>
+                    <button type="button" data-markdown="`{{selected}}`" title="行内代码">代码</button>
+                    <button type="button" data-markdown="```&#10;{{selected}}&#10;```" title="代码块">代码块</button>
+                    <span class="toolbar-divider"></span>
+                    <button type="button" data-markdown="- " title="无序列表">列表</button>
+                    <button type="button" data-markdown="- [ ] " title="任务列表">任务</button>
+                    <button type="button" data-markdown="| 表头 | 表头 |&#10;| ---- | ---- |&#10;| 内容 | 内容 |" title="插入表格">表格</button>
+                    <span class="toolbar-divider"></span>
+                    <button type="button" data-markdown="[{{selected}}](https://)" title="链接">链接</button>
+                    <button type="button" data-markdown="![{{selected}}](https://)" title="图片">图片</button>
+                </div>
+
+                <!-- 编辑器与预览区域 -->
+                <div class="md-editor-container">
+                    <div class="md-editor-pane">
+                        <div class="pane-label">编辑</div>
+                        <textarea id="markdown_content" name="markdown_content" required>{{ article.markdown_content if article else '' }}</textarea>
+                    </div>
+                    <div class="md-splitter"></div>
+                    <div class="md-preview-pane">
+                        <div class="pane-label">预览</div>
+                        <div id="markdown_preview" class="md-preview-content"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -76,4 +109,11 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Markdown 解析库 -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<!-- Markdown 编辑器 -->
+<script src="/static/js/markdown-editor.js"></script>
 {% endblock %}

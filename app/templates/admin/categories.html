@@ -1,0 +1,48 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}分类管理 - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-header">
+        <h1>分类管理</h1>
+        <a href="/admin/categories/new" class="btn-primary">新建分类</a>
+    </div>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>名称</th>
+                <th>Slug</th>
+                <th>描述</th>
+                <th>文章数</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.id }}</td>
+                <td>{{ category.name }}</td>
+                <td><code>{{ category.slug }}</code></td>
+                <td>{{ category.description or '-' }}</td>
+                <td>{{ category.articles|length }}</td>
+                <td>{{ category.created_at.strftime('%Y-%m-%d') if category.created_at else '-' }}</td>
+                <td>
+                    <a href="/admin/categories/{{ category.id }}/edit">编辑</a>
+                    <a href="/admin/categories/{{ category.id }}/delete" onclick="return confirm('确定删除该分类?')">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not categories %}
+    <div class="empty-state">
+        <p>暂无分类，点击"新建分类"添加</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

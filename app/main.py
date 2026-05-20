@@ -7,8 +7,10 @@ import hashlib
 import time
 import secrets
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Form, Cookie
+from fastapi import FastAPI, Request, Depends, HTTPException, Form, Cookie, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+import os
+import uuid
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -61,7 +63,7 @@ def get_current_theme(db: Session, theme_cookie: Optional[str] = None) -> str:
     if theme_cookie and theme_cookie in config.AVAILABLE_THEMES:
         return theme_cookie
 
-    print(f"[DEBUG] 获取当前主题: {current_theme}")
+    # print(f"[DEBUG] 获取当前主题: {current_theme}")
     return current_theme
 
 
@@ -98,11 +100,29 @@ def generate_csrf_token() -> str:
     return hashlib.sha256(f"{time.time()}{config.CSRF_SECRET_KEY}".encode()).hexdigest()
 
 
-def verify_csrf_token(request: Request) -> bool:
+def verify_csrf_token(request: Request, csrf_token: str) -> bool:
     """验证 CSRF token"""
-    token = request.cookies.get(config.CSRF_COOKIE_NAME)
-    form_token = request.form.get("csrf_token") if hasattr(request, 'form') else None
-    return token and form_token and token == form_token
+    cookie_token = request.cookies.get(config.CSRF_COOKIE_NAME)
+    return cookie_token and csrf_token and cookie_token == csrf_token
+
+
+def is_valid_slug(slug: str) -> bool:
+    """验证 slug 格式：只能包含字母、数字和连字符"""
+    import re
+    return bool(re.match(r'^[a-zA-Z0-9-]+$', slug))
+
+
+def flash_message(request: Request, message: str, category: str = "info"):
+    """设置 Flash 消息"""
+    if "messages" not in request.session:
+        request.session["messages"] = []
+    request.session["messages"].append({"message": message, "category": category})
+
+
+def get_flashed_messages(request: Request) -> list:
+    """获取并清除所有 Flash 消息"""
+    messages = request.session.pop("messages", [])
+    return messages
 
 
 # ============ 中间件 ============
@@ -703,6 +723,201 @@ async def delete_comment_api(comment_id: int, request: Request, db: Session = De
     admin = require_admin(request, db)
     crud.delete_comment(db, comment_id)
     return {"success": True}
+
+
+# ============ 图片上传 API ============
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "uploads")
+ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+
+def allowed_file(filename: str) -> bool:
+    """检查文件扩展名是否允许"""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.post("/admin/api/upload-image")
+async def upload_image(request: Request, image: UploadFile = File(...)):
+    """上传图片接口"""
+    # 验证管理员权限
+    from sqlalchemy.orm import sessionmaker
+    engine = create_engine(config.DATABASE_URL, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = SessionLocal()
+    try:
+        require_admin(request, db)
+    finally:
+        db.close()
+
+    # 确保上传目录存在
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    # 验证文件
+    if not image.filename or not allowed_file(image.filename):
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "只支持 jpg、jpeg、png、gif、webp 格式的图片"}
+        )
+
+    # 生成唯一文件名
+    ext = image.filename.rsplit(".", 1)[1].lower()
+    filename = f"{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+
+    # 保存文件
+    try:
+        contents = await image.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"文件保存失败: {str(e)}"}
+        )
+
+    # 返回可访问的 URL
+    file_url = f"/static/uploads/{filename}"
+    return {"success": True, "url": file_url}
+
+
+# ============ 分类管理 ============
+
+@app.get("/admin/categories", response_class=HTMLResponse)
+async def admin_categories(request: Request, db: Session = Depends(get_db)):
+    """分类管理页面"""
+    admin = require_admin(request, db)
+    categories = crud.get_categories(db)
+    messages = get_flashed_messages(request)
+    return templates.TemplateResponse("admin/categories.html", {
+        "request": request,
+        "admin": admin,
+        "categories": categories,
+        "messages": messages
+    })
+
+
+@app.get("/admin/categories/new", response_class=HTMLResponse)
+async def admin_new_category(request: Request, db: Session = Depends(get_db)):
+    """新增分类页面"""
+    admin = require_admin(request, db)
+    csrf_token = generate_csrf_token()
+    messages = get_flashed_messages(request)
+    response = templates.TemplateResponse("admin/category_form.html", {
+        "request": request,
+        "admin": admin,
+        "category": None,
+        "csrf_token": csrf_token,
+        "messages": messages
+    })
+    response.set_cookie(key=config.CSRF_COOKIE_NAME, value=csrf_token, httponly=True)
+    return response
+
+
+@app.post("/admin/categories/new")
+async def admin_create_category(
+    request: Request,
+    name: str = Form(...),
+    slug: str = Form(...),
+    description: str = Form(""),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """创建分类"""
+    admin = require_admin(request, db)
+
+    # 验证 CSRF
+    if not verify_csrf_token(request, csrf_token):
+        flash_message(request, "无效的请求，请重试", "error")
+        return RedirectResponse(url="/admin/categories/new", status_code=303)
+
+    # 验证 slug 格式
+    if not is_valid_slug(slug):
+        flash_message(request, "Slug 只能包含字母、数字和连字符", "error")
+        return RedirectResponse(url="/admin/categories/new", status_code=303)
+
+    # 检查 slug 唯一性
+    if crud.get_category_by_slug(db, slug):
+        flash_message(request, "该 Slug 已存在，请使用其他名称", "error")
+        return RedirectResponse(url="/admin/categories/new", status_code=303)
+
+    from app.schemas import CategoryCreate
+    crud.create_category(db, CategoryCreate(
+        name=name, slug=slug, description=description
+    ))
+
+    flash_message(request, "分类创建成功", "success")
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
+@app.get("/admin/categories/{category_id}/edit", response_class=HTMLResponse)
+async def admin_edit_category(category_id: int, request: Request, db: Session = Depends(get_db)):
+    """编辑分类页面"""
+    admin = require_admin(request, db)
+    category = crud.get_category_by_id(db, category_id)
+    if not category:
+        raise HTTPException(status_code=404, detail="分类未找到")
+    csrf_token = generate_csrf_token()
+    messages = get_flashed_messages(request)
+    response = templates.TemplateResponse("admin/category_form.html", {
+        "request": request,
+        "admin": admin,
+        "category": category,
+        "csrf_token": csrf_token,
+        "messages": messages
+    })
+    response.set_cookie(key=config.CSRF_COOKIE_NAME, value=csrf_token, httponly=True)
+    return response
+
+
+@app.post("/admin/categories/{category_id}/edit")
+async def admin_update_category(
+    category_id: int,
+    request: Request,
+    name: str = Form(...),
+    slug: str = Form(...),
+    description: str = Form(""),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """更新分类"""
+    admin = require_admin(request, db)
+
+    # 验证 CSRF
+    if not verify_csrf_token(request, csrf_token):
+        flash_message(request, "无效的请求，请重试", "error")
+        return RedirectResponse(url=f"/admin/categories/{category_id}/edit", status_code=303)
+
+    # 验证 slug 格式
+    if not is_valid_slug(slug):
+        flash_message(request, "Slug 只能包含字母、数字和连字符", "error")
+        return RedirectResponse(url=f"/admin/categories/{category_id}/edit", status_code=303)
+
+    # 检查 slug 唯一性（排除当前分类）
+    existing_category = crud.get_category_by_slug(db, slug)
+    if existing_category and existing_category.id != category_id:
+        flash_message(request, "该 Slug 已存在，请使用其他名称", "error")
+        return RedirectResponse(url=f"/admin/categories/{category_id}/edit", status_code=303)
+
+    from app.schemas import CategoryUpdate
+    category = crud.update_category(db, category_id, CategoryUpdate(
+        name=name, slug=slug, description=description
+    ))
+    if not category:
+        flash_message(request, "分类未找到", "error")
+        return RedirectResponse(url="/admin/categories", status_code=303)
+
+    flash_message(request, "分类更新成功", "success")
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
+@app.get("/admin/categories/{category_id}/delete")
+async def admin_delete_category(category_id: int, request: Request, db: Session = Depends(get_db)):
+    """删除分类"""
+    admin = require_admin(request, db)
+    success = crud.delete_category(db, category_id)
+    if success:
+        flash_message(request, "分类删除成功", "success")
+    else:
+        flash_message(request, "分类删除失败", "error")
+    return RedirectResponse(url="/admin/categories", status_code=303)
 
 
 # ============ 设置页面 ============

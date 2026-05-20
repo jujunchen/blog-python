@@ -2,6 +2,13 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* 全局盒模型重置 */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 :root {
     --admin-bg: #0c0c0c;
     --admin-surface: #141414;
@@ -21,6 +28,7 @@
     --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
 
     --sidebar-width: 240px;
+    --sidebar-collapsed-width: 68px;
     --transition-fast: 150ms;
     --transition-normal: 250ms;
     --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -94,6 +102,107 @@
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    transition: width var(--transition-normal) var(--easing-smooth), transform var(--transition-normal) var(--easing-smooth);
+    z-index: 90;
+}
+
+/* Sidebar Collapse Handle */
+.sidebar-handle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 48px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast) var(--easing-smooth);
+    z-index: 1;
+}
+
+.sidebar-handle:hover {
+    background: var(--admin-surface-hover);
+    border-color: var(--admin-border-light);
+    width: 16px;
+}
+
+.sidebar-handle .handle-icon {
+    color: var(--admin-text-muted);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    transition: transform var(--transition-normal) var(--easing-smooth);
+}
+
+.sidebar-handle:hover .handle-icon {
+    color: var(--admin-text-secondary);
+}
+
+/* Sidebar Collapsed State (Desktop) */
+.admin-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.admin-sidebar.collapsed .sidebar-handle .handle-icon {
+    transform: rotate(180deg);
+}
+
+.admin-sidebar.collapsed .logo-text,
+.admin-sidebar.collapsed .nav-label,
+.admin-sidebar.collapsed .nav-menu li a span:not(.nav-icon),
+.admin-sidebar.collapsed .version {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: opacity var(--transition-fast);
+}
+
+.admin-sidebar.collapsed .sidebar-header {
+    padding: 24px 12px;
+    justify-content: center;
+}
+
+.admin-sidebar.collapsed .admin-logo {
+    justify-content: center;
+}
+
+.admin-sidebar.collapsed .nav-menu li a {
+    justify-content: center;
+    padding: 12px;
+}
+
+.admin-sidebar.collapsed .sidebar-nav {
+    padding: 16px 6px;
+}
+
+/* Main Content Sidebar Collapsed */
+.admin-main.sidebar-collapsed {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Sidebar Overlay (Mobile) */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 80;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
 }
 
 .sidebar-header {
@@ -468,16 +577,18 @@
 /* Forms */
 .form-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 16px;
 }
 
 .form-group {
     flex: 1;
+    min-width: 0;
 }
 
 .form-group.full {
-    flex: 100%;
+    flex: 1 1 100%;
 }
 
 .form-group label {
@@ -655,21 +766,372 @@
     font-size: 13px;
 }
 
+/* Flash Messages */
+.flash-messages {
+    margin-bottom: 24px;
+}
+
+.flash-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.flash-success {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid var(--admin-success);
+    color: var(--admin-success);
+}
+
+.flash-error {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid var(--admin-danger);
+    color: var(--admin-danger);
+}
+
+.flash-info {
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid #60a5fa;
+    color: #60a5fa;
+}
+
+.flash-warning {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid var(--admin-warning);
+    color: var(--admin-warning);
+}
+
+.flash-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.flash-close:hover {
+    opacity: 1;
+}
+
+/* Markdown Editor */
+.hint-text {
+    font-weight: normal;
+    color: var(--admin-text-muted);
+    font-size: 12px;
+}
+
+.md-toolbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 6px 6px 0 0;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.md-toolbar button {
+    padding: 6px 10px;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 4px;
+    color: var(--admin-text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    min-width: 28px;
+}
+
+.md-toolbar button:hover {
+    background: var(--admin-surface-hover);
+    border-color: var(--admin-border-light);
+    color: var(--admin-text);
+}
+
+.md-toolbar button:active {
+    transform: scale(0.95);
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--admin-border);
+    margin: 0 4px;
+}
+
+.md-editor-container {
+    display: grid;
+    grid-template-columns: 1fr 6px 1fr;
+    gap: 0;
+}
+
+.md-splitter {
+    width: 6px;
+    background: var(--admin-border);
+    cursor: col-resize;
+    transition: background-color var(--transition-fast);
+    position: relative;
+}
+
+.md-splitter:hover,
+.md-splitter.active {
+    background: var(--admin-accent);
+}
+
+.md-splitter::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 24px;
+    background: var(--admin-text-muted);
+    border-radius: 1px;
+}
+
+.md-splitter:hover::before,
+.md-splitter.active::before {
+    background: var(--admin-accent);
+}
+
+.md-editor-pane,
+.md-preview-pane {
+    display: flex;
+    flex-direction: column;
+}
+
+.pane-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--admin-text-muted);
+    margin-bottom: 8px;
+}
+
+#markdown_content {
+    height: 500px;
+    box-sizing: border-box;
+    resize: none;
+    font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--admin-bg);
+    border-radius: 0 0 6px 6px;
+    border: 1px solid var(--admin-border);
+    border-top: none;
+    overflow-y: auto;
+}
+
+.md-preview-content {
+    height: 500px;
+    box-sizing: border-box;
+    padding: 16px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 0 0 6px 6px;
+    border-top: none;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* Markdown Preview Styles */
+.md-preview-content h1,
+.md-preview-content h2,
+.md-preview-content h3,
+.md-preview-content h4,
+.md-preview-content h5,
+.md-preview-content h6 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--admin-text);
+}
+
+.md-preview-content h1 { font-size: 22px; border-bottom: 1px solid var(--admin-border); padding-bottom: 8px; }
+.md-preview-content h2 { font-size: 18px; border-bottom: 1px solid var(--admin-border); padding-bottom: 6px; }
+.md-preview-content h3 { font-size: 16px; }
+.md-preview-content h4 { font-size: 14px; }
+
+.md-preview-content p {
+    margin-bottom: 16px;
+}
+
+.md-preview-content ul,
+.md-preview-content ol {
+    margin: 0 0 16px 24px;
+}
+
+.md-preview-content li {
+    margin-bottom: 4px;
+}
+
+.md-preview-content code {
+    background: var(--admin-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--admin-accent);
+}
+
+.md-preview-content pre {
+    background: var(--admin-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+.md-preview-content pre code {
+    background: none;
+    padding: 0;
+}
+
+.md-preview-content blockquote {
+    border-left: 3px solid var(--admin-border-light);
+    padding-left: 16px;
+    margin: 0 0 16px 0;
+    color: var(--admin-text-secondary);
+}
+
+.md-preview-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+.md-preview-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+}
+
+.md-preview-content th,
+.md-preview-content td {
+    border: 1px solid var(--admin-border);
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.md-preview-content th {
+    background: var(--admin-bg);
+    font-weight: 600;
+}
+
+.md-preview-content a {
+    color: #60a5fa;
+    text-decoration: underline;
+}
+
+.md-preview-content hr {
+    border: none;
+    border-top: 1px solid var(--admin-border);
+    margin: 24px 0;
+}
+
+/* Upload Status */
+.md-status-success,
+.md-status-error,
+.md-status-info {
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 13px;
+    animation: fadeIn 0.3s ease;
+}
+
+.md-status-success {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid var(--admin-success);
+    color: var(--admin-success);
+}
+
+.md-status-error {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid var(--admin-danger);
+    color: var(--admin-danger);
+}
+
+.md-status-info {
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid #60a5fa;
+    color: #60a5fa;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+    .md-editor-container {
+        grid-template-columns: 1fr;
+    }
+
+    .md-splitter {
+        display: none;
+    }
+
+    .md-toolbar {
+        gap: 2px;
+    }
+
+    .md-toolbar button {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    /* Mobile Sidebar */
     .admin-sidebar {
-        width: 100%;
-        position: relative;
-        height: auto;
+        width: var(--sidebar-width);
+        position: fixed;
+        transform: translateX(-100%);
+        height: 100vh;
+    }
+
+    .admin-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .admin-sidebar.collapsed {
+        width: var(--sidebar-width);
     }
 
     .admin-main {
         margin-left: 0;
-        padding: 20px;
+        padding: 72px 20px 20px;
     }
 
     .admin-body {
-        flex-direction: column;
+        flex-direction: row;
     }
 
     .dashboard-grid {
@@ -682,5 +1144,26 @@
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Mobile Toggle in Topbar */
+    .mobile-sidebar-toggle {
+        display: flex;
+    }
+}
+
+@media (min-width: 769px) {
+    .sidebar-overlay {
+        display: none;
+    }
+
+    .mobile-sidebar-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-handle {
+        display: none;
     }
 }

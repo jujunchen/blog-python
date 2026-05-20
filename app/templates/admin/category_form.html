@@ -1,0 +1,40 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}{{ '编辑' if category else '新建' }}分类 - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ '编辑' if category else '新建' }}分类</h1>
+
+    <form method="post" action="{{ '/admin/categories/' + category.id|string + '/edit' if category else '/admin/categories/new' }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">名称 *</label>
+                <input type="text" id="name" name="name" value="{{ category.name if category else '' }}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="slug">Slug *</label>
+                <input type="text" id="slug" name="slug" value="{{ category.slug if category else '' }}" required>
+                <p class="form-hint">URL 中使用的标识符，只能包含字母、数字和连字符</p>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group full">
+                <label for="description">描述</label>
+                <textarea id="description" name="description" rows="4">{{ category.description if category else '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">保存</button>
+            <a href="/admin/categories" class="btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
