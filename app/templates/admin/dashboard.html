@@ -1,150 +1,74 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/admin_base.html" %}
 
 {% block title %}仪表盘 - {{ config.APP_NAME }}{% endblock %}
 
-{% block nav_extra %}
-<li><a href="/admin/dashboard">后台</a></li>
-<li><a href="/admin/articles">文章</a></li>
-<li><a href="/admin/comments">评论</a></li>
-<li><a href="/admin/settings">设置</a></li>
-<li><a href="/admin/logout">退出</a></li>
-{% endblock %}
-
 {% block content %}
-<div class="container">
-    <h1>仪表盘</h1>
+<h1>仪表盘</h1>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>已发布文章</h3>
-            <p class="stat-number">{{ published_count }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>草稿文章</h3>
-            <p class="stat-number">{{ draft_count }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>总评论数</h3>
-            <p class="stat-number">{{ total_comments }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>待审核评论</h3>
-            <p class="stat-number">{{ pending_comments }}</p>
-        </div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>已发布文章</h3>
+        <p class="stat-number">{{ published_count }}</p>
     </div>
-
-    <div class="dashboard-grid">
-        <div class="dashboard-section">
-            <h2>最近文章</h2>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>标题</th>
-                        <th>状态</th>
-                        <th>日期</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article in recent_articles %}
-                    <tr>
-                        <td><a href="/admin/articles/{{ article.id }}/edit">{{ article.title }}</a></td>
-                        <td><span class="status-{{ article.status }}">{{ article.status }}</span></td>
-                        <td>{{ article.created_at.strftime('%Y-%m-%d') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="dashboard-section">
-            <h2>最近同步记录</h2>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>文章</th>
-                        <th>平台</th>
-                        <th>状态</th>
-                        <th>时间</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in recent_sync_records %}
-                    <tr>
-                        <td>{{ record.article_id }}</td>
-                        <td>{{ record.platform_type }}</td>
-                        <td><span class="status-{{ record.status }}">{{ record.status }}</span></td>
-                        <td>{{ record.synced_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="stat-card">
+        <h3>草稿文章</h3>
+        <p class="stat-number">{{ draft_count }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>总评论数</h3>
+        <p class="stat-number">{{ total_comments }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>待审核评论</h3>
+        <p class="stat-number">{{ pending_comments }}</p>
     </div>
 </div>
 
-<style>
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
+<div class="dashboard-grid">
+    <div class="dashboard-section">
+        <h2>最近文章</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>状态</th>
+                    <th>日期</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in recent_articles %}
+                <tr>
+                    <td><a href="/admin/articles/{{ article.id }}/edit">{{ article.title }}</a></td>
+                    <td><span class="status-{{ article.status }}">{{ article.status }}</span></td>
+                    <td>{{ article.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-.stat-card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 0;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 1.5rem;
-}
-
-.dashboard-section {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.dashboard-section h2 {
-    margin-top: 0;
-}
-
-.admin-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.admin-table th,
-.admin-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.admin-table th {
-    font-weight: 600;
-}
-
-.status-published { color: green; }
-.status-draft { color: orange; }
-.status-pending { color: blue; }
-.status-success { color: green; }
-.status-failed { color: red; }
-</style>
+    <div class="dashboard-section">
+        <h2>最近同步记录</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>文章</th>
+                    <th>平台</th>
+                    <th>状态</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in recent_sync_records %}
+                <tr>
+                    <td>{{ record.article_id }}</td>
+                    <td>{{ record.platform_type }}</td>
+                    <td><span class="status-{{ record.status }}">{{ record.status }}</span></td>
+                    <td>{{ record.synced_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

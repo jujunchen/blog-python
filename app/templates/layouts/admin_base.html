@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
+    <title>{% block title %}{{ config.APP_NAME }}{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Admin Styles -->
+    <link rel="stylesheet" href="/static/css/admin.css">
+
+    <!-- Extra Styles -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body" data-theme="dark">
+    <!-- Top Toolbar -->
+    <div class="admin-topbar">
+        <button id="admin-theme-toggle" class="theme-btn" title="切换主题">
+            <span class="theme-icon">☀</span>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <a href="/admin/dashboard" class="admin-logo">
+                <span class="logo-icon">A</span>
+                <span class="logo-text">Admin</span>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-label">管理</span>
+                <ul class="nav-menu">
+                    <li>
+                        <a href="/admin/dashboard" class="{% if request.path == '/admin/dashboard' %}active{% endif %}">
+                            <span class="nav-icon">◆</span>
+                            <span>仪表盘</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/articles" class="{% if '/admin/articles' in request.path %}active{% endif %}">
+                            <span class="nav-icon">◈</span>
+                            <span>文章管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/comments" class="{% if '/admin/comments' in request.path %}active{% endif %}">
+                            <span class="nav-icon">◉</span>
+                            <span>评论管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/sync" class="{% if '/admin/sync' in request.path %}active{% endif %}">
+                            <span class="nav-icon">↻</span>
+                            <span>同步管理</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">系统</span>
+                <ul class="nav-menu">
+                    <li>
+                        <a href="/admin/settings" class="{% if '/admin/settings' in request.path %}active{% endif %}">
+                            <span class="nav-icon">◐</span>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">快捷</span>
+                <ul class="nav-menu">
+                    <li>
+                        <a href="/" target="_blank">
+                            <span class="nav-icon">→</span>
+                            <span>博客首页</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/logout">
+                            <span class="nav-icon">←</span>
+                            <span>退出登录</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="version">v1.0.0</span>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- JavaScript -->
+    <script>
+        // 主题切换功能
+        (function() {
+            const STORAGE_KEY = 'admin_theme';
+            const body = document.body;
+            const toggleBtn = document.getElementById('admin-theme-toggle');
+            const icon = toggleBtn?.querySelector('.theme-icon');
+
+            // 初始化主题
+            function initTheme() {
+                const savedTheme = localStorage.getItem(STORAGE_KEY);
+                if (savedTheme) {
+                    body.setAttribute('data-theme', savedTheme);
+                }
+                updateIcon(savedTheme || 'dark');
+            }
+
+            // 更新图标
+            function updateIcon(theme) {
+                if (icon) {
+                    icon.textContent = theme === 'light' ? '☾' : '☀';
+                }
+            }
+
+            // 切换主题
+            function toggleTheme() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem(STORAGE_KEY, newTheme);
+                updateIcon(newTheme);
+            }
+
+            // 绑定事件
+            toggleBtn?.addEventListener('click', toggleTheme);
+
+            // 页面加载时初始化
+            initTheme();
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,12 +1,6 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/admin_base.html" %}
 
 {% block title %}文章管理 - {{ config.APP_NAME }}{% endblock %}
-
-{% block nav_extra %}
-<li><a href="/admin/dashboard">后台</a></li>
-<li><a href="/admin/articles">文章</a></li>
-<li><a href="/admin/logout">退出</a></li>
-{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -66,42 +60,4 @@
     </div>
     {% endif %}
 </div>
-
-<style>
-.admin-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-}
-
-.btn-primary:hover {
-    opacity: 0.9;
-}
-
-.tag-small {
-    background: var(--bg-secondary);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.8rem;
-    margin-right: 4px;
-}
-
-.btn-link {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: 0;
-    font-size: inherit;
-}
-</style>
 {% endblock %}

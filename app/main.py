@@ -53,10 +53,16 @@ templates.env.globals["now"] = datetime.now
 
 def get_current_theme(db: Session, theme_cookie: Optional[str] = None) -> str:
     """获取当前主题"""
+    # 优先从数据库读取主题设置
+    setting = crud.get_theme_setting(db)
+    current_theme = setting.current_theme if setting else config.DEFAULT_THEME
+
+    # 如果cookie中的主题合法且与数据库不同，以cookie为准（用户手动切换）
     if theme_cookie and theme_cookie in config.AVAILABLE_THEMES:
         return theme_cookie
-    setting = crud.get_theme_setting(db)
-    return setting.current_theme
+
+    print(f"[DEBUG] 获取当前主题: {current_theme}")
+    return current_theme
 
 
 def get_admin_from_session(request: Request, db: Session = Depends(get_db)) -> Optional[dict]:
@@ -719,18 +725,25 @@ async def admin_settings(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/admin/settings/theme")
 async def update_theme_setting_api(
+    request: Request,
     theme: str = Form(...),
-    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """更新主题设置"""
     admin = require_admin(request, db)
 
-    if theme not in config.AVAILABLE_THEMES:
-        raise HTTPException(status_code=400, detail="无效的主题")
+    print(f"[DEBUG] 收到主题切换请求: theme={theme}, 可用主题={config.AVAILABLE_THEMES}")
 
-    crud.update_theme_setting(db, theme)
-    return {"success": True, "theme": theme}
+    if theme not in config.AVAILABLE_THEMES:
+        raise HTTPException(status_code=400, detail=f"无效的主题: {theme}")
+
+    try:
+        crud.update_theme_setting(db, theme)
+        print(f"[DEBUG] 主题已更新到数据库: {theme}")
+        return {"success": True, "theme": theme}
+    except Exception as e:
+        print(f"[ERROR] 主题更新失败: {e}")
+        raise HTTPException(status_code=500, detail=f"保存失败: {str(e)}")
 
 
 @app.post("/admin/settings/comment")

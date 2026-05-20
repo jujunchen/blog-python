@@ -6,6 +6,11 @@
     <meta name="description" content="{% block meta_description %}{% endblock %}">
     <title>{% block title %}{{ config.APP_NAME }}{% endblock %}</title>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap" rel="stylesheet">
+
     <!-- 主题样式 -->
     <link rel="stylesheet" href="/static/css/themes/{{ theme | default('light') }}/main.css">
 
@@ -23,15 +28,6 @@
                 <li><a href="/search">搜索</a></li>
                 {% block nav_extra %}{% endblock %}
             </ul>
-            <div class="theme-switcher">
-                <button id="theme-toggle" title="切换主题">
-                    {% if theme == 'dark' %}
-                    <span class="icon">☀️</span>
-                    {% else %}
-                    <span class="icon">🌙</span>
-                    {% endif %}
-                </button>
-            </div>
         </div>
     </nav>
 
@@ -53,27 +49,7 @@
 
     <!-- JavaScript -->
     <script>
-        // 主题切换
-        document.getElementById('theme-toggle')?.addEventListener('click', async () => {
-            const currentTheme = '{{ theme }}';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            try {
-                const response = await fetch('/api/theme', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `theme=${newTheme}`
-                });
-
-                if (response.ok) {
-                    location.reload();
-                }
-            } catch (error) {
-                console.error('主题切换失败:', error);
-            }
-        });
+        // 主题切换功能已移至后台管理
     </script>
 
     {% block extra_js %}{% endblock %}

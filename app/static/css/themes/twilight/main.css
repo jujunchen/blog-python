@@ -1,22 +1,21 @@
-/* 极简主义博客主题 - Light Theme */
+/* 紫暮霞光主题 - Twilight Theme */
+/* 风格：优雅、神秘、艺术 */
 
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Quattrocento+Sans:wght@400;700&display=swap');
 
-/* CSS Variables */
 :root {
-    --color-bg: #ffffff;
-    --color-bg-secondary: #fafafa;
-    --color-text: #1a1a1a;
-    --color-text-secondary: #666666;
-    --color-text-muted: #999999;
-    --color-accent: #8b6914;
-    --color-accent-hover: #6b5010;
-    --color-border: #e5e5e5;
-    --color-border-light: #f0f0f0;
+    --color-bg: #faf8fc;
+    --color-bg-secondary: #f5f2f8;
+    --color-text: #2d2438;
+    --color-text-secondary: #5a5066;
+    --color-text-muted: #968aa3;
+    --color-accent: #9b8aa6;
+    --color-accent-hover: #7a6a85;
+    --color-border: #e0d8e8;
+    --color-border-light: #ebe6f0;
 
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-body: 'Source Serif Pro', Georgia, serif;
+    --font-display: 'Cinzel', Georgia, serif;
+    --font-body: 'Quattrocento Sans', -apple-system, sans-serif;
 
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
@@ -33,7 +32,6 @@
     --navbar-height: 64px;
 }
 
-/* Reset & Base */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -52,15 +50,14 @@ body {
     color: var(--color-text);
     background-color: var(--color-bg);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 600;
     line-height: 1.3;
     color: var(--color-text);
+    letter-spacing: 0.05em;
 }
 
 h1 { font-size: 2.5rem; }
@@ -81,21 +78,19 @@ p {
     margin-bottom: var(--spacing-md);
 }
 
-/* Container */
 .container {
     max-width: var(--max-width);
     margin: 0 auto;
     padding: 0 var(--spacing-md);
 }
 
-/* Navigation */
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--navbar-height);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(250, 248, 252, 0.95);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--color-border);
     z-index: 1000;
@@ -111,10 +106,9 @@ p {
 .logo {
     font-family: var(--font-display);
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text);
-    letter-spacing: -0.02em;
-    flex-shrink: 0;
+    letter-spacing: 0.1em;
 }
 
 .logo:hover {
@@ -125,32 +119,12 @@ p {
     display: flex;
     list-style: none;
     gap: var(--spacing-lg);
-    margin: 0 auto;
-}
-
-.logo {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-text);
-    letter-spacing: -0.02em;
-    flex-shrink: 0;
-}
-
-.logo:hover {
-    color: var(--color-accent);
-}
-
-.nav-menu {
-    display: flex;
-    list-style: none;
-    gap: var(--spacing-lg);
-    margin: 0 auto;
 }
 
 .nav-menu a {
     font-family: var(--font-body);
     font-size: 0.9375rem;
+    font-weight: 700;
     color: var(--color-text-secondary);
     position: relative;
     padding: 0.25rem 0;
@@ -189,14 +163,12 @@ p {
     opacity: 1;
 }
 
-/* Main Content */
 .main-content {
     min-height: calc(100vh - var(--navbar-height));
     padding-top: calc(var(--navbar-height) + var(--spacing-xl));
     padding-bottom: var(--spacing-xxl);
 }
 
-/* Post List */
 .posts-list {
     display: flex;
     flex-direction: column;
@@ -294,10 +266,9 @@ p {
 .tag:hover {
     color: var(--color-accent);
     border-color: var(--color-accent);
-    background: rgba(139, 105, 20, 0.05);
+    background: rgba(155, 138, 166, 0.05);
 }
 
-/* Article Detail */
 .article-detail {
     max-width: var(--max-width);
     margin: 0 auto;
@@ -412,7 +383,6 @@ p {
     flex-wrap: wrap;
 }
 
-/* Comments Section */
 .comments-section {
     margin-top: var(--spacing-xxl);
     padding-top: var(--spacing-xl);
@@ -472,6 +442,7 @@ p {
     padding: 0.875rem 1.75rem;
     font-family: var(--font-body);
     font-size: 0.9375rem;
+    font-weight: 700;
     border-radius: 4px;
     cursor: pointer;
     transition: all var(--transition-fast) var(--easing-smooth);
@@ -511,7 +482,7 @@ p {
 }
 
 .comment-author {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
 }
 
@@ -525,7 +496,6 @@ p {
     line-height: 1.7;
 }
 
-/* Pagination */
 .pagination {
     display: flex;
     justify-content: center;
@@ -555,7 +525,6 @@ p {
     color: var(--color-text-muted);
 }
 
-/* Footer */
 .footer {
     background: var(--color-bg-secondary);
     padding: var(--spacing-xl) 0;
@@ -577,14 +546,12 @@ p {
     color: var(--color-accent);
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: var(--spacing-xxl) 0;
     color: var(--color-text-muted);
 }
 
-/* Archive Page */
 .archive-title {
     font-size: 2rem;
     margin-bottom: var(--spacing-xl);
@@ -632,7 +599,6 @@ p {
     color: var(--color-accent);
 }
 
-/* Search Page */
 .search-form {
     display: flex;
     gap: var(--spacing-sm);
@@ -664,6 +630,7 @@ p {
     padding: 0.875rem 1.5rem;
     font-family: var(--font-body);
     font-size: 0.9375rem;
+    font-weight: 700;
     border-radius: 4px;
     cursor: pointer;
     transition: background var(--transition-fast);
@@ -673,7 +640,6 @@ p {
     background: var(--color-accent);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     :root {
         --spacing-xl: 3rem;

@@ -9,20 +9,19 @@
         <header class="article-header">
             <h1 class="article-title">{{ article.title }}</h1>
             <div class="article-meta">
-                <span class="article-date">
-                    {{ article.publish_date.strftime('%Y-%m-%d') if article.publish_date else article.created_at.strftime('%Y-%m-%d') }}
-                </span>
+                <time datetime="{{ article.publish_date.isoformat() if article.publish_date else article.created_at.isoformat() }}">
+                    {{ article.publish_date.strftime('%Y年%m月%d日') if article.publish_date else article.created_at.strftime('%Y年%m月%d日') }}
+                </time>
                 {% if article.category %}
-                <span class="article-category">
-                    <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
-                </span>
+                <span class="separator">·</span>
+                <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
                 {% endif %}
             </div>
         </header>
 
         {% if article.cover_image %}
         <div class="article-cover">
-            <img src="{{ article.cover_image }}" alt="{{ article.title }}">
+            <img src="{{ article.cover_image }}" alt="{{ article.title }}" loading="lazy">
         </div>
         {% endif %}
 
@@ -45,24 +44,27 @@
         <form class="comment-form" method="post" action="/api/comments">
             <input type="hidden" name="article_id" value="{{ article.id }}">
 
-            <div class="form-group">
-                <label for="author_name">昵称</label>
-                <input type="text" id="author_name" name="author_name" required>
-            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="author_name">昵称</label>
+                    <input type="text" id="author_name" name="author_name" required placeholder="您的称呼">
+                </div>
 
-            <div class="form-group">
-                <label for="author_email">邮箱（不公开）</label>
-                <input type="email" id="author_email" name="author_email">
+                <div class="form-group">
+                    <label for="author_email">邮箱（不公开）</label>
+                    <input type="email" id="author_email" name="author_email" placeholder="your@email.com">
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="content">评论内容</label>
-                <textarea id="content" name="content" rows="4" required></textarea>
+                <textarea id="content" name="content" rows="4" required placeholder="写下您的想法..."></textarea>
             </div>
 
-            <div class="form-group">
+            <div class="form-group form-checkbox">
                 <label>
-                    <input type="checkbox" name="is_anonymous" value="true"> 匿名评论
+                    <input type="checkbox" name="is_anonymous" value="true">
+                    <span>匿名评论</span>
                 </label>
             </div>
 
@@ -80,7 +82,9 @@
                     <span class="comment-author">
                         {% if comment.is_anonymous %}匿名用户{% else %}{{ comment.author_name }}{% endif %}
                     </span>
-                    <span class="comment-date">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <time class="comment-date" datetime="{{ comment.created_at.isoformat() }}">
+                        {{ comment.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+                    </time>
                 </div>
                 <div class="comment-content">{{ comment.content }}</div>
             </div>

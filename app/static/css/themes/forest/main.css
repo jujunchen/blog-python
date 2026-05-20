@@ -1,22 +1,21 @@
-/* 极简主义博客主题 - Light Theme */
+/* 森林绿境主题 - Forest Theme */
+/* 风格：自然、宁静、有机 */
 
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
 
-/* CSS Variables */
 :root {
-    --color-bg: #ffffff;
-    --color-bg-secondary: #fafafa;
-    --color-text: #1a1a1a;
-    --color-text-secondary: #666666;
-    --color-text-muted: #999999;
-    --color-accent: #8b6914;
-    --color-accent-hover: #6b5010;
-    --color-border: #e5e5e5;
-    --color-border-light: #f0f0f0;
+    --color-bg: #faf9f6;
+    --color-bg-secondary: #f5f4f0;
+    --color-text: #1a3a2f;
+    --color-text-secondary: #4a6b5c;
+    --color-text-muted: #8aa396;
+    --color-accent: #5a7c5a;
+    --color-accent-hover: #3d5c3d;
+    --color-border: #d4e0d4;
+    --color-border-light: #e8f0e8;
 
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-body: 'Source Serif Pro', Georgia, serif;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Source Sans Pro', -apple-system, sans-serif;
 
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
@@ -33,7 +32,6 @@
     --navbar-height: 64px;
 }
 
-/* Reset & Base */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -52,10 +50,8 @@ body {
     color: var(--color-text);
     background-color: var(--color-bg);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 600;
@@ -81,21 +77,19 @@ p {
     margin-bottom: var(--spacing-md);
 }
 
-/* Container */
 .container {
     max-width: var(--max-width);
     margin: 0 auto;
     padding: 0 var(--spacing-md);
 }
 
-/* Navigation */
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--navbar-height);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(250, 249, 246, 0.95);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--color-border);
     z-index: 1000;
@@ -114,7 +108,6 @@ p {
     font-weight: 600;
     color: var(--color-text);
     letter-spacing: -0.02em;
-    flex-shrink: 0;
 }
 
 .logo:hover {
@@ -125,27 +118,6 @@ p {
     display: flex;
     list-style: none;
     gap: var(--spacing-lg);
-    margin: 0 auto;
-}
-
-.logo {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-text);
-    letter-spacing: -0.02em;
-    flex-shrink: 0;
-}
-
-.logo:hover {
-    color: var(--color-accent);
-}
-
-.nav-menu {
-    display: flex;
-    list-style: none;
-    gap: var(--spacing-lg);
-    margin: 0 auto;
 }
 
 .nav-menu a {
@@ -189,14 +161,12 @@ p {
     opacity: 1;
 }
 
-/* Main Content */
 .main-content {
     min-height: calc(100vh - var(--navbar-height));
     padding-top: calc(var(--navbar-height) + var(--spacing-xl));
     padding-bottom: var(--spacing-xxl);
 }
 
-/* Post List */
 .posts-list {
     display: flex;
     flex-direction: column;
@@ -294,10 +264,9 @@ p {
 .tag:hover {
     color: var(--color-accent);
     border-color: var(--color-accent);
-    background: rgba(139, 105, 20, 0.05);
+    background: rgba(90, 124, 90, 0.05);
 }
 
-/* Article Detail */
 .article-detail {
     max-width: var(--max-width);
     margin: 0 auto;
@@ -412,7 +381,6 @@ p {
     flex-wrap: wrap;
 }
 
-/* Comments Section */
 .comments-section {
     margin-top: var(--spacing-xxl);
     padding-top: var(--spacing-xl);
@@ -525,7 +493,6 @@ p {
     line-height: 1.7;
 }
 
-/* Pagination */
 .pagination {
     display: flex;
     justify-content: center;
@@ -555,7 +522,6 @@ p {
     color: var(--color-text-muted);
 }
 
-/* Footer */
 .footer {
     background: var(--color-bg-secondary);
     padding: var(--spacing-xl) 0;
@@ -577,14 +543,12 @@ p {
     color: var(--color-accent);
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: var(--spacing-xxl) 0;
     color: var(--color-text-muted);
 }
 
-/* Archive Page */
 .archive-title {
     font-size: 2rem;
     margin-bottom: var(--spacing-xl);
@@ -632,7 +596,6 @@ p {
     color: var(--color-accent);
 }
 
-/* Search Page */
 .search-form {
     display: flex;
     gap: var(--spacing-sm);
@@ -673,7 +636,6 @@ p {
     background: var(--color-accent);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     :root {
         --spacing-xl: 3rem;

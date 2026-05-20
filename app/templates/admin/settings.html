@@ -1,11 +1,6 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/admin_base.html" %}
 
 {% block title %}系统设置 - {{ config.APP_NAME }}{% endblock %}
-
-{% block nav_extra %}
-<li><a href="/admin/dashboard">后台</a></li>
-<li><a href="/admin/logout">退出</a></li>
-{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -18,8 +13,13 @@
             <div class="setting-item">
                 <label>当前主题</label>
                 <select id="theme-select">
-                    <option value="light" {% if theme_setting.current_theme == 'light' %}selected{% endif %}>亮色主题</option>
-                    <option value="dark" {% if theme_setting.current_theme == 'dark' %}selected{% endif %}>暗色主题</option>
+                    <option value="light" {% if theme_setting.current_theme == 'light' %}selected{% endif %}>极简亮色</option>
+                    <option value="dark" {% if theme_setting.current_theme == 'dark' %}selected{% endif %}>极简暗色</option>
+                    <option value="forest" {% if theme_setting.current_theme == 'forest' %}selected{% endif %}>森林绿境</option>
+                    <option value="ocean" {% if theme_setting.current_theme == 'ocean' %}selected{% endif %}>深海蓝调</option>
+                    <option value="earth" {% if theme_setting.current_theme == 'earth' %}selected{% endif %}>暖沙大地</option>
+                    <option value="twilight" {% if theme_setting.current_theme == 'twilight' %}selected{% endif %}>紫暮霞光</option>
+                    <option value="ink" {% if theme_setting.current_theme == 'ink' %}selected{% endif %}>墨韵东方</option>
                 </select>
                 <button onclick="updateTheme()" class="btn-save">保存</button>
             </div>
@@ -51,67 +51,30 @@
     </div>
 </div>
 
-<style>
-.settings-grid {
-    display: grid;
-    gap: 2rem;
-}
-
-.settings-section {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.settings-section h2 {
-    margin-top: 0;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-}
-
-.setting-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.setting-item label {
-    flex: 1;
-}
-
-.setting-item select {
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-
-.btn-save {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-</style>
-
 {% block extra_js %}
 <script>
 async function updateTheme() {
     const theme = document.getElementById('theme-select').value;
+    console.log('[DEBUG] 正在保存主题:', theme);
     try {
         const response = await fetch('/admin/settings/theme', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `theme=${theme}`
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `theme=${encodeURIComponent(theme)}`
         });
+        const result = await response.json();
+        console.log('[DEBUG] 服务器响应:', result);
         if (response.ok) {
-            alert('主题已更新');
+            alert('主题已更新为: ' + result.theme);
             location.reload();
+        } else {
+            alert('保存失败: ' + (result.detail || '未知错误'));
         }
     } catch (error) {
-        alert('保存失败');
+        console.error('[ERROR] 请求失败:', error);
+        alert('保存失败: ' + error.message);
     }
 }
 

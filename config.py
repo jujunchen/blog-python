@@ -22,7 +22,7 @@ PORT = 8000
 
 # 主题配置
 DEFAULT_THEME = "light"
-AVAILABLE_THEMES = ["light", "dark"]
+AVAILABLE_THEMES = ["light", "dark", "forest", "ocean", "earth", "twilight", "ink"]
 
 # CSRF 配置
 CSRF_SECRET_KEY = "your-secret-key-change-in-production"

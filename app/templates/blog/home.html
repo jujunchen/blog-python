@@ -9,7 +9,7 @@
         <article class="post-item">
             {% if article.cover_image %}
             <div class="post-cover">
-                <img src="{{ article.cover_image }}" alt="{{ article.title }}">
+                <img src="{{ article.cover_image }}" alt="{{ article.title }}" loading="lazy">
             </div>
             {% endif %}
             <div class="post-content">
@@ -17,11 +17,12 @@
                     <a href="/article/{{ article.slug }}">{{ article.title }}</a>
                 </h2>
                 <div class="post-meta">
-                    <span class="post-date">{{ article.publish_date.strftime('%Y-%m-%d') if article.publish_date else article.created_at.strftime('%Y-%m-%d') }}</span>
+                    <time datetime="{{ article.publish_date.isoformat() if article.publish_date else article.created_at.isoformat() }}">
+                        {{ article.publish_date.strftime('%Y年%m月%d日') if article.publish_date else article.created_at.strftime('%Y年%m月%d日') }}
+                    </time>
                     {% if article.category %}
-                    <span class="post-category">
-                        <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
-                    </span>
+                    <span class="separator">·</span>
+                    <a href="/category/{{ article.category.slug }}">{{ article.category.name }}</a>
                     {% endif %}
                 </div>
                 <p class="post-summary">{{ article.summary or '暂无摘要' }}</p>
@@ -42,13 +43,13 @@
     {% if total > per_page %}
     <div class="pagination">
         {% if page > 1 %}
-        <a href="?page={{ page - 1 }}" class="prev">上一页</a>
+        <a href="?page={{ page - 1 }}" class="prev">← 上一页</a>
         {% endif %}
 
-        <span class="page-info">第 {{ page }} / {{ ((total - 1) // per_page) + 1 }} 页</span>
+        <span class="page-info">{{ page }} / {{ ((total - 1) // per_page) + 1 }}</span>
 
         {% if page * per_page < total %}
-        <a href="?page={{ page + 1 }}" class="next">下一页</a>
+        <a href="?page={{ page + 1 }}" class="next">下一页 →</a>
         {% endif %}
     </div>
     {% endif %}
