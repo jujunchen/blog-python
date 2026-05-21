@@ -197,3 +197,44 @@ class LoginAttempt(Base):
 
     def __repr__(self):
         return f"<LoginAttempt(username='{self.username}', success={self.success})>"
+
+
+class AIConfig(Base):
+    """AI 服务通用配置"""
+    __tablename__ = 'ai_configs'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), default='default')
+    provider = Column(String(50), default='openai')  # openai / ollama / anthropic
+    api_key = Column(String(500))
+    api_base = Column(String(500))
+    model = Column(String(100), default='gpt-3.5-turbo')
+    temperature = Column(Integer, default=70)  # 存储为整数 0-100，使用时除以 100
+    max_tokens = Column(Integer, default=1000)
+    timeout = Column(Integer, default=60)
+    is_default = Column(Boolean, default=True)
+    is_enabled = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<AIConfig(provider='{self.provider}', model='{self.model}')>"
+
+
+class AIPromptTemplate(Base):
+    """AI 提示词模板 - 支持多种场景"""
+    __tablename__ = 'ai_prompt_templates'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)  # 模板名称
+    scene = Column(String(50), nullable=False, index=True)  # summary / title / generate / expand
+    prompt = Column(Text, nullable=False)  # 提示词内容，支持变量 {{content}}, {{title}}, {{topic}}
+    description = Column(String(500))  # 模板说明
+    is_system = Column(Boolean, default=False)  # 是否为系统内置模板
+    is_active = Column(Boolean, default=True)
+    sort_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<AIPromptTemplate(name='{self.name}', scene='{self.scene}')>"

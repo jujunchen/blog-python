@@ -1,0 +1,253 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}提示词模板管理 - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>提示词模板管理</h1>
+        <button onclick="showTemplateForm()" class="btn-primary">+ 新建模板</button>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for msg in messages %}
+        <div class="message {{ msg.type }}">{{ msg.text }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 模板列表 -->
+    <div class="templates-list">
+        {% for template in templates %}
+        <div class="template-card {% if not template.is_active %}inactive{% endif %}">
+            <div class="template-header">
+                <h3>{{ template.name }}</h3>
+                <div class="template-meta">
+                    <span class="scene-badge">{{ template.scene }}</span>
+                    {% if template.is_system %}
+                    <span class="system-badge">系统</span>
+                    {% endif %}
+                    {% if not template.is_active %}
+                    <span class="inactive-badge">已禁用</span>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="template-desc">{{ template.description or '暂无描述' }}</p>
+            <div class="template-prompt">
+                <code>{{ template.prompt }}</code>
+            </div>
+            <div class="template-actions">
+                {% if template.is_system %}
+                <button disabled class="btn-sm btn-secondary" style="opacity: 0.5; cursor: not-allowed;">系统模板</button>
+                {% else %}
+                <button onclick="editTemplate({{ template.id }}, '{{ template.name }}', '{{ template.scene }}', `{{ template.prompt | replace("`", "\\`") | replace("\n", "\\n") }}`, '{{ template.description or '' }}', {{ template.sort_order }}, {{ template.is_active }})" class="btn-sm btn-secondary">编辑</button>
+                <button onclick="deleteTemplate({{ template.id }})" class="btn-sm btn-danger">删除</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 新建/编辑模板弹窗 -->
+    <div id="template-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modal-title">新建模板</h3>
+            <form method="post" action="/admin/ai/prompts" id="template-form">
+                <input type="hidden" id="form-template-id" name="template_id">
+
+                <div class="form-group">
+                    <label for="form-name">模板名称 *</label>
+                    <input type="text" id="form-name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-scene">场景标识 *</label>
+                    <select id="form-scene" name="scene" required>
+                        <option value="summary">文章摘要 (summary)</option>
+                        <option value="title">标题优化 (title)</option>
+                        <option value="generate">文章生成 (generate)</option>
+                        <option value="expand">内容扩写 (expand)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-prompt">提示词内容 * <small>支持变量: {{ content }}, {{ title }}, {{ topic }}, {{ requirements }}</small></label>
+                    <textarea id="form-prompt" name="prompt" rows="8" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-description">描述</label>
+                    <input type="text" id="form-description" name="description">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-sort-order">排序</label>
+                        <input type="number" id="form-sort-order" name="sort_order" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="is_active" id="form-is-active" checked>
+                            启用
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal()" class="btn-secondary">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.templates-list {
+    display: grid;
+    gap: 20px;
+}
+.template-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    background: #fff;
+}
+.template-card.inactive {
+    opacity: 0.6;
+}
+.template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+.template-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+.template-meta {
+    display: flex;
+    gap: 8px;
+}
+.scene-badge, .system-badge, .inactive-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+.scene-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+.system-badge {
+    background: #fef3c7;
+    color: #b45309;
+}
+.inactive-badge {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.template-desc {
+    color: #6b7280;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+.template-prompt {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-family: monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.template-actions {
+    display: flex;
+    gap: 8px;
+}
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+.btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-danger:hover {
+    background: #fecaca;
+}
+</style>
+
+<script>
+function showTemplateForm() {
+    document.getElementById('modal-title').textContent = '新建模板';
+    document.getElementById('template-form').reset();
+    document.getElementById('form-template-id').value = '';
+    document.getElementById('template-modal').style.display = 'flex';
+}
+
+function editTemplate(id, name, scene, prompt, description, sort_order, isActive) {
+    document.getElementById('modal-title').textContent = '编辑模板';
+    document.getElementById('form-template-id').value = id;
+    document.getElementById('form-name').value = name;
+    document.getElementById('form-scene').value = scene;
+    document.getElementById('form-prompt').value = prompt.replace(/\\n/g, '\n');
+    document.getElementById('form-description').value = description;
+    document.getElementById('form-sort-order').value = sort_order;
+    document.getElementById('form-is-active').checked = isActive;
+    document.getElementById('template-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('template-modal').style.display = 'none';
+}
+
+function deleteTemplate(id) {
+    if (confirm('确定要删除这个模板吗？')) {
+        window.location.href = `/admin/ai/prompts/${id}/delete`;
+    }
+}
+
+// 点击模态框外部关闭
+document.getElementById('template-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

@@ -546,13 +546,18 @@ async def admin_new_article(request: Request, db: Session = Depends(get_db)):
     tags = crud.get_tags(db)
     csrf_token = generate_csrf_token()
 
+    from app.services.ai_service import AIService
+    ai_service = AIService(db)
+    ai_available = ai_service.is_available()
+
     return templates.TemplateResponse("admin/article_form.html", {
         "request": request,
         "admin": admin,
         "article": None,
         "categories": categories,
         "tags": tags,
-        "csrf_token": csrf_token
+        "csrf_token": csrf_token,
+        "ai_available": ai_available
     })
 
 
@@ -609,6 +614,10 @@ async def admin_edit_article(article_id: int, request: Request, db: Session = De
     article_tags = [t.name for t in article.tags]
     csrf_token = generate_csrf_token()
 
+    from app.services.ai_service import AIService
+    ai_service = AIService(db)
+    ai_available = ai_service.is_available()
+
     return templates.TemplateResponse("admin/article_form.html", {
         "request": request,
         "admin": admin,
@@ -616,7 +625,8 @@ async def admin_edit_article(article_id: int, request: Request, db: Session = De
         "categories": categories,
         "tags": all_tags,
         "article_tags": article_tags,
-        "csrf_token": csrf_token
+        "csrf_token": csrf_token,
+        "ai_available": ai_available
     })
 
 
@@ -1045,6 +1055,180 @@ async def trigger_sync(
     result = sync_article_to_platform(db, article, platform_type)
 
     return result
+
+
+# ============ AI 设置管理 ============
+
+@app.get("/admin/ai/config", response_class=HTMLResponse)
+async def admin_ai_config(request: Request, db: Session = Depends(get_db)):
+    """AI 配置页面"""
+    admin = require_admin(request, db)
+
+    ai_config = crud.get_or_create_default_ai_config(db)
+    templates_list = crud.get_prompt_templates(db, active_only=False)
+    messages = get_flashed_messages(request)
+
+    return templates.TemplateResponse("admin/ai_config.html", {
+        "request": request,
+        "admin": admin,
+        "ai_config": ai_config,
+        "templates": templates_list,
+        "messages": messages
+    })
+
+
+@app.post("/admin/ai/config")
+async def update_ai_config(
+    request: Request,
+    provider: str = Form(...),
+    api_key: str = Form(""),
+    api_base: str = Form(""),
+    model: str = Form(...),
+    temperature: int = Form(70),
+    max_tokens: int = Form(1000),
+    timeout: int = Form(60),
+    is_enabled: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    """更新 AI 配置"""
+    admin = require_admin(request, db)
+
+    config_data = {
+        'provider': provider,
+        'api_key': api_key,
+        'api_base': api_base,
+        'model': model,
+        'temperature': temperature,
+        'max_tokens': max_tokens,
+        'timeout': timeout,
+        'is_enabled': is_enabled
+    }
+
+    crud.update_ai_config(db, config_data)
+    flash_message(request, "AI 配置已更新", "success")
+    return RedirectResponse(url="/admin/ai/config", status_code=303)
+
+
+@app.post("/admin/ai/config/test")
+async def test_ai_config(request: Request, db: Session = Depends(get_db)):
+    """测试 AI 连接"""
+    admin = require_admin(request, db)
+
+    from app.services.ai_service import AIService
+    ai_service = AIService(db)
+    success, message = ai_service.test_connection()
+
+    return {"success": success, "message": message}
+
+
+@app.get("/admin/ai/prompts", response_class=HTMLResponse)
+async def admin_ai_prompts(request: Request, db: Session = Depends(get_db)):
+    """提示词模板管理页面"""
+    admin = require_admin(request, db)
+
+    templates_list = crud.get_prompt_templates(db, active_only=False)
+    messages = get_flashed_messages(request)
+
+    return templates.TemplateResponse("admin/ai_prompts.html", {
+        "request": request,
+        "admin": admin,
+        "templates": templates_list,
+        "messages": messages
+    })
+
+
+@app.post("/admin/ai/prompts")
+async def create_or_update_prompt_template(
+    request: Request,
+    template_id: int = Form(None),
+    name: str = Form(...),
+    scene: str = Form(...),
+    prompt: str = Form(...),
+    description: str = Form(""),
+    sort_order: int = Form(0),
+    is_active: bool = Form(True),
+    db: Session = Depends(get_db)
+):
+    """创建或更新提示词模板"""
+    admin = require_admin(request, db)
+
+    template_data = {
+        'name': name,
+        'scene': scene,
+        'prompt': prompt,
+        'description': description,
+        'sort_order': sort_order,
+        'is_active': is_active
+    }
+
+    if template_id:
+        # 检查是否为系统模板
+        from app.models import AIPromptTemplate
+        template = db.query(AIPromptTemplate).filter(AIPromptTemplate.id == template_id).first()
+        if template and template.is_system:
+            flash_message(request, "无法编辑系统模板", "error")
+        else:
+            crud.update_prompt_template(db, template_id, template_data)
+            flash_message(request, "模板已更新", "success")
+    else:
+        crud.create_prompt_template(db, template_data)
+        flash_message(request, "模板已创建", "success")
+
+    return RedirectResponse(url="/admin/ai/prompts", status_code=303)
+
+
+@app.get("/admin/ai/prompts/{template_id}/delete")
+async def delete_prompt_template(template_id: int, request: Request, db: Session = Depends(get_db)):
+    """删除提示词模板"""
+    admin = require_admin(request, db)
+
+    success = crud.delete_prompt_template(db, template_id)
+    if success:
+        flash_message(request, "模板已删除", "success")
+    else:
+        flash_message(request, "无法删除系统模板", "error")
+
+    return RedirectResponse(url="/admin/ai/prompts", status_code=303)
+
+
+# ============ AI 生成 API ============
+
+@app.post("/admin/api/ai/generate")
+async def ai_generate(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """AI 生成内容 API"""
+    admin = require_admin(request, db)
+
+    try:
+        data = await request.json()
+        scene = data.get('scene')
+        variables = data.get('variables', {})
+
+        if not scene:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "场景不能为空"}
+            )
+
+        from app.services.ai_service import AIService
+        ai_service = AIService(db)
+
+        if not ai_service.is_available():
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "AI 服务未启用或配置不完整"}
+            )
+
+        result = ai_service.generate(scene, **variables)
+        return {"success": True, "result": result}
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": str(e)}
+        )
 
 
 # ============ 启动事件 ============

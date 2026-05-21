@@ -12,7 +12,15 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="title">标题 *</label>
-                <input type="text" id="title" name="title" value="{{ article.title if article else '' }}" required>
+                <div class="input-with-ai">
+                    <input type="text" id="title" name="title" value="{{ article.title if article else '' }}" required>
+                    <button type="button" class="ai-inline-btn" id="ai-title-btn" {% if not ai_available %}disabled title="请先在 AI 设置中配置服务"{% endif %}>
+                        💡 优化
+                    </button>
+                </div>
+                {% if not ai_available %}
+                <small class="hint-text">💡 <a href="/admin/ai/config">配置 AI 服务</a> 后可使用 AI 优化标题</small>
+                {% endif %}
             </div>
         </div>
 
@@ -37,7 +45,15 @@
         <div class="form-row">
             <div class="form-group full">
                 <label for="summary">摘要</label>
-                <textarea id="summary" name="summary" rows="3">{{ article.summary if article else '' }}</textarea>
+                <div class="textarea-with-ai">
+                    <textarea id="summary" name="summary" rows="3">{{ article.summary if article else '' }}</textarea>
+                    <button type="button" class="ai-inline-btn ai-textarea-btn" id="ai-summary-btn" {% if not ai_available %}disabled title="请先在 AI 设置中配置服务"{% endif %}>
+                        🤖 生成
+                    </button>
+                </div>
+                {% if not ai_available %}
+                <small class="hint-text">💡 <a href="/admin/ai/config">配置 AI 服务</a> 后可使用 AI 自动生成摘要</small>
+                {% endif %}
             </div>
         </div>
 
@@ -65,6 +81,10 @@
                     <span class="toolbar-divider"></span>
                     <button type="button" data-markdown="[{{selected}}](https://)" title="链接">链接</button>
                     <button type="button" data-markdown="![{{selected}}](https://)" title="图片">图片</button>
+                    <span class="toolbar-divider"></span>
+                    <button type="button" id="ai-generate-btn" title="AI 生成文章内容" {% if not ai_available %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
+                        ✍️ AI 生成
+                    </button>
                 </div>
 
                 <!-- 编辑器与预览区域 -->
@@ -112,8 +132,62 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+/* AI 悬浮按钮样式 */
+.input-with-ai {
+    position: relative;
+}
+.textarea-with-ai {
+    position: relative;
+}
+.ai-inline-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: var(--accent-color, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ai-inline-btn:hover {
+    background: var(--accent-hover, #2563eb);
+}
+.ai-inline-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+}
+.input-with-ai input:focus + .ai-inline-btn,
+.input-with-ai .ai-inline-btn:hover,
+.textarea-with-ai textarea:focus + .ai-textarea-btn,
+.textarea-with-ai .ai-textarea-btn:hover {
+    opacity: 1;
+    visibility: visible;
+}
+.ai-textarea-btn {
+    top: auto;
+    bottom: 8px;
+    transform: none;
+}
+.hint-text {
+    color: #6b7280;
+    font-size: 12px;
+}
+.hint-text a {
+    color: #3b82f6;
+}
+</style>
 <!-- Markdown 解析库 -->
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <!-- Markdown 编辑器 -->
 <script src="/static/js/markdown-editor.js"></script>
+<!-- AI 助手 -->
+<script src="/static/js/ai-helper.js"></script>
 {% endblock %}

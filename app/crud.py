@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     Article, Category, Tag, Comment, CommentConfig,
-    AdminUser, ThemeSetting, SyncAccount, SyncRecord, LoginAttempt
+    AdminUser, ThemeSetting, SyncAccount, SyncRecord, LoginAttempt,
+    AIConfig, AIPromptTemplate
 )
 from app.schemas import (
     ArticleCreate, ArticleUpdate, CategoryCreate, CategoryUpdate,
@@ -684,5 +685,158 @@ def init_database(db: Session):
             require_approval=True
         )
         db.add(config)
+
+    # 初始化默认提示词模板
+    init_default_prompt_templates(db)
+
+    db.commit()
+
+
+# ============ AIConfig CRUD ============
+
+def get_default_ai_config(db: Session) -> Optional[AIConfig]:
+    """获取默认的 AI 配置"""
+    return db.query(AIConfig).filter(AIConfig.is_default == True).first()
+
+
+def get_or_create_default_ai_config(db: Session) -> AIConfig:
+    """获取或创建默认 AI 配置"""
+    config = get_default_ai_config(db)
+    if not config:
+        config = AIConfig(
+            name='default',
+            provider='openai',
+            model='gpt-3.5-turbo',
+            temperature=70,
+            max_tokens=1000,
+            timeout=60,
+            is_default=True,
+            is_enabled=False
+        )
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+    return config
+
+
+def update_ai_config(db: Session, config_data: dict) -> AIConfig:
+    """更新 AI 配置"""
+    config = get_or_create_default_ai_config(db)
+    for key, value in config_data.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+    config.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(config)
+    return config
+
+
+# ============ AIPromptTemplate CRUD ============
+
+def get_prompt_templates(db: Session, scene: str = None, active_only: bool = True) -> List[AIPromptTemplate]:
+    """获取提示词模板"""
+    query = db.query(AIPromptTemplate)
+    if scene:
+        query = query.filter(AIPromptTemplate.scene == scene)
+    if active_only:
+        query = query.filter(AIPromptTemplate.is_active == True)
+    return query.order_by(AIPromptTemplate.sort_order, AIPromptTemplate.created_at).all()
+
+
+def get_prompt_template_by_id(db: Session, template_id: int) -> Optional[AIPromptTemplate]:
+    """根据 ID 获取提示词模板"""
+    return db.query(AIPromptTemplate).filter(AIPromptTemplate.id == template_id).first()
+
+
+def get_prompt_template_by_scene(db: Session, scene: str) -> Optional[AIPromptTemplate]:
+    """根据场景获取激活的提示词模板"""
+    return db.query(AIPromptTemplate).filter(
+        and_(
+            AIPromptTemplate.scene == scene,
+            AIPromptTemplate.is_active == True
+        )
+    ).order_by(AIPromptTemplate.sort_order).first()
+
+
+def create_prompt_template(db: Session, template_data: dict) -> AIPromptTemplate:
+    """创建提示词模板"""
+    template = AIPromptTemplate(**template_data)
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return template
+
+
+def update_prompt_template(db: Session, template_id: int, template_data: dict) -> Optional[AIPromptTemplate]:
+    """更新提示词模板"""
+    template = get_prompt_template_by_id(db, template_id)
+    if not template:
+        return None
+    for key, value in template_data.items():
+        if hasattr(template, key):
+            setattr(template, key, value)
+    template.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(template)
+    return template
+
+
+def delete_prompt_template(db: Session, template_id: int) -> bool:
+    """删除提示词模板"""
+    template = get_prompt_template_by_id(db, template_id)
+    if not template or template.is_system:
+        return False
+    db.delete(template)
+    db.commit()
+    return True
+
+
+def init_default_prompt_templates(db: Session):
+    """初始化默认提示词模板"""
+    default_templates = [
+        {
+            'name': '文章摘要生成',
+            'scene': 'summary',
+            'prompt': '请用中文总结以下文章的主要内容，不超过200字：\n\n{{content}}',
+            'description': '用于自动生成文章摘要',
+            'is_system': True,
+            'sort_order': 0
+        },
+        {
+            'name': '标题优化',
+            'scene': 'title',
+            'prompt': '请为以下文章内容生成3个吸引人的标题，每行一个：\n\n{{content}}',
+            'description': '用于优化文章标题',
+            'is_system': True,
+            'sort_order': 1
+        },
+        {
+            'name': '文章生成',
+            'scene': 'generate',
+            'prompt': '请根据以下主题生成一篇详细的博客文章，使用 Markdown 格式：\n\n主题：{{topic}}\n要求：{{requirements}}',
+            'description': '根据主题生成完整文章',
+            'is_system': True,
+            'sort_order': 2
+        },
+        {
+            'name': '内容扩写',
+            'scene': 'expand',
+            'prompt': '请将以下内容进行扩写，使其更加详细丰富，保持原有的意思：\n\n{{content}}',
+            'description': '对已有内容进行扩写',
+            'is_system': True,
+            'sort_order': 3
+        }
+    ]
+
+    for template_data in default_templates:
+        existing = db.query(AIPromptTemplate).filter(
+            and_(
+                AIPromptTemplate.scene == template_data['scene'],
+                AIPromptTemplate.is_system == True
+            )
+        ).first()
+        if not existing:
+            template = AIPromptTemplate(**template_data)
+            db.add(template)
 
     db.commit()
